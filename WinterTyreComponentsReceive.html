@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winter Tyre Components Receive</title>
+<style>
+/* ========== Reset & Base ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f5f6fa; color: #333; font-size: 14px;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ========== Top Bar ========== */
+.top-bar {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex; align-items: center;
+  padding: 0 24px;
+  height: 48px;
+}
+.top-bar .home-ic {
+  width: 32px; height: 32px; display: inline-flex;
+  align-items: center; justify-content: center; color: #555;
+  cursor: pointer;
+}
+.top-bar .tabs {
+  display: flex; align-items: stretch; height: 100%;
+  margin-left: 8px;
+  flex: 1; min-width: 0; overflow-x: auto;
+}
+.top-bar .tab {
+  padding: 0 18px; display: inline-flex; align-items: center;
+  font-size: 14px; color: #666; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; height: 100%;
+  position: relative;
+}
+.top-bar .tab .close-x {
+  margin-left: 8px; color: #bbb; font-size: 14px;
+}
+.top-bar .tab:hover { color: #1890ff; }
+.top-bar .tab.active { color: #1890ff; font-weight: 500; border-bottom-color: #1890ff; }
+
+.top-bar .right-area {
+  display: flex; align-items: center; gap: 14px; margin-left: auto;
+}
+.top-bar .search-mini {
+  display: flex; align-items: center; gap: 6px; color: #666;
+  cursor: pointer;
+}
+.top-bar .icon-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #666; cursor: pointer;
+}
+.top-bar .icon-circle:hover { background: #f5f5f5; color: #1890ff; }
+.top-bar .user-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: #333;
+}
+.top-bar .user-chip .avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #ff4d4f; color: #fff; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+
+/* ========== Filter Section ========== */
+.filter-section {
+  background: #fff; padding: 18px 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px;
+  align-items: end;
+}
+.filter-row.extra { display: contents; }
+/* Filter item: label on top, input below */
+.filter-item {
+  display: flex; flex-direction: column; gap: 6px;
+  min-width: 0;
+}
+.filter-item > label {
+  font-size: 13px; color: #333; font-weight: 400;
+}
+.filter-item input,
+.filter-item select {
+  height: 32px; padding: 0 10px; border: 1px solid #d9d9d9;
+  border-radius: 4px; font-size: 13px; color: #333;
+  background: #fff; outline: none; transition: border-color 0.2s;
+  width: 100%;
+}
+.filter-item input:focus,
+.filter-item select:focus {
+  border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1);
+}
+.filter-item input::placeholder { color: #bfbfbf; }
+.filter-item .date-range {
+  display: flex; align-items: center; gap: 4px;
+}
+.filter-item .date-range input { min-width: 0; flex: 1; }
+.filter-item .date-range .sep { color: #999; }
+
+/* The action cell containing Reset / Search — sits in the last grid cell, aligned right */
+.filter-actions-cell {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  height: 32px;
+}
+.btn-reset {
+  height: 32px; padding: 0 16px; border: 1px solid #d9d9d9;
+  border-radius: 4px; background: #fff; cursor: pointer;
+  font-size: 13px; color: #333; transition: all 0.2s;
+}
+.btn-reset:hover { border-color: #1890ff; color: #1890ff; }
+.btn-search {
+  height: 32px; padding: 0 22px; border: none;
+  border-radius: 4px; background: #1890ff; color: #fff;
+  cursor: pointer; font-size: 13px; transition: background 0.2s;
+}
+.btn-search:hover { background: #40a9ff; }
+
+/* Hidden second row when collapsed */
+.filter-row.extra { display: contents; }
+.filter-row.extra.hidden .filter-item { display: none; }
+
+/* ========== Table Card ========== */
+.table-card {
+  background: #fff; margin: 16px 24px; border-radius: 4px;
+  border: 1px solid #e8e8e8; overflow: visible; position: relative;
+}
+.toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; padding: 12px 16px;
+}
+.icon-btn {
+  width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer;
+  color: #555; transition: all 0.2s; position: relative;
+}
+.icon-btn:hover { border-color: #1890ff; color: #1890ff; }
+.btn-export {
+  height: 32px; padding: 0 18px; border: 1px solid #d9d9d9;
+  border-radius: 4px; background: #fff; cursor: pointer;
+  font-size: 13px; color: #333; display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.2s;
+}
+.btn-export:hover { border-color: #1890ff; color: #1890ff; }
+
+/* Table */
+.table-wrap { width: 100%; overflow-x: auto; }
+table.data-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  min-width: 1900px;
+}
+.data-table thead th {
+  background: #fafafa; color: #333; font-weight: 500;
+  padding: 14px 16px; text-align: left; border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+.data-table tbody td {
+  padding: 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top;
+  color: #333;
+}
+.data-table tbody tr:hover { background: #fafcff; }
+.data-table .col-no { width: 60px; }
+.data-table .col-action { width: 90px; }
+.data-table .receipt-link {
+  color: #1890ff; cursor: pointer;
+}
+.data-table .receipt-link:hover { text-decoration: underline; }
+.po-list { display: flex; flex-direction: column; gap: 4px; }
+.po-list span { white-space: nowrap; }
+
+/* Action icons in row (matches reference: a single small blue inbox icon) */
+.row-actions { display: flex; align-items: center; gap: 14px; }
+.row-actions .ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #1890ff; transition: opacity 0.2s;
+  position: relative;
+}
+.row-actions .ico:hover { opacity: 0.75; }
+.row-actions .ico[data-disabled="true"] { color: #d9d9d9; cursor: not-allowed; }
+.row-actions .ico[data-disabled="true"]:hover { opacity: 1; }
+
+/* tooltip */
+.row-actions .ico::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.75); color: #fff; padding: 3px 8px; border-radius: 4px;
+  font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.15s;
+}
+.row-actions .ico:hover::after { opacity: 1; }
+
+/* Pagination */
+.pagination {
+  display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+  padding: 14px 16px; color: #666;
+}
+.pagination .page-info { margin-right: 12px; color: #555; }
+.pagination button {
+  min-width: 28px; height: 28px; border: 1px solid #d9d9d9; background: #fff;
+  border-radius: 4px; cursor: pointer; color: #333; padding: 0 6px;
+}
+.pagination button.active { border-color: #1890ff; color: #1890ff; }
+.pagination button:disabled { color: #bfbfbf; cursor: not-allowed; }
+.pagination select {
+  height: 28px; border: 1px solid #d9d9d9; border-radius: 4px;
+  padding: 0 6px; background: #fff; outline: none;
+}
+
+/* ========== Floating feedback button (matches reference) ========== */
+.fab-feedback {
+  position: fixed; right: 24px; bottom: 24px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #1890ff; color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px rgba(24,144,255,0.35);
+}
+
+/* ========== Modal ========== */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: none; align-items: flex-start; justify-content: center; z-index: 999;
+  padding: 80px 16px 16px;
+}
+.modal-mask.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 4px; width: 100%; max-width: 1080px;
+  max-height: calc(100vh - 96px); overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+}
+.modal-header {
+  padding: 18px 24px; border-bottom: 1px solid #f0f0f0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2 { font-size: 16px; font-weight: 600; color: #1f1f1f; }
+.modal-close {
+  width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #999; border-radius: 4px;
+}
+.modal-close:hover { color: #333; background: #f5f5f5; }
+.modal-body { padding: 20px 24px; overflow: auto; flex: 1; }
+.modal-footer {
+  padding: 14px 24px; border-top: 1px solid #f0f0f0;
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+.btn-primary {
+  height: 32px; padding: 0 22px; border: none; border-radius: 4px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px;
+}
+.btn-primary:hover { background: #40a9ff; }
+
+/* Modal filter row: label on top, inline buttons */
+.modal-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px 20px;
+  align-items: end;
+}
+.modal-filter .m-item { display: flex; flex-direction: column; gap: 6px; }
+.modal-filter .m-item label { font-size: 13px; color: #333; }
+.modal-filter .m-item input {
+  height: 32px; padding: 0 10px; border: 1px solid #d9d9d9;
+  border-radius: 4px; font-size: 13px; color: #333; background: #fff; outline: none;
+}
+.modal-filter .m-item input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.modal-filter .m-actions { display: flex; gap: 10px; align-items: center; }
+
+.modal table.data-table { min-width: 720px; }
+.modal .modal-table-wrap {
+  margin-top: 18px;
+}
+.modal .data-table thead th { background: #fafafa; }
+.modal .qty-input {
+  width: 80px; height: 28px; padding: 0 8px;
+  border: 1px solid #d9d9d9; border-radius: 4px; outline: none;
+  font-size: 13px;
+}
+.modal .qty-input:focus { border-color: #1890ff; }
+
+/* ========== Column Settings Popover ========== */
+.col-settings-pop {
+  position: absolute; right: 16px; top: 56px; z-index: 50;
+  background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12); padding: 10px 14px;
+  min-width: 220px; max-height: 360px; overflow-y: auto;
+  display: none;
+}
+.col-settings-pop.show { display: block; }
+.col-settings-pop h4 { font-size: 13px; margin-bottom: 8px; color: #555; }
+.col-settings-pop label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; font-size: 13px; cursor: pointer;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 1280px) {
+  .filter-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 960px) {
+  .filter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-section, .table-card { margin-left: 12px; margin-right: 12px; }
+  .top-bar { padding: 0 12px; }
+  .modal-filter { grid-template-columns: 1fr; }
+}
+
+/* SVG icon sizing */
+svg.ic { width: 16px; height: 16px; }
+svg.ic-lg { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar with Tabs (matches system style in reference) -->
+<div class="top-bar">
+  <div class="home-ic" title="Home">
+    <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/>
+    </svg>
+  </div>
+  <div class="tabs">
+    <div class="tab">Parts Inventory_R...</div>
+    <div class="tab">ASN</div>
+    <div class="tab active">Winter Tyre Components Receive</div>
+    <div class="tab">Delivery Notes</div>
+  </div>
+  <div class="right-area">
+    <div class="search-mini">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <span>Delivery Notes</span>
+    </div>
+    <div class="icon-circle" title="Add">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </div>
+    <div class="icon-circle" title="Language">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/>
+      </svg>
+    </div>
+    <div class="user-chip">
+      <span class="avatar">95+</span>
+      <span>Spare Parts Manager (Region)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Section: label on top of each input; 4 items in row 1, 3 items + actions cell in row 2 -->
+<div class="filter-section">
+  <div class="filter-grid" id="filterGrid">
+    <!-- Row 1: 4 filter items -->
+    <div class="filter-item">
+      <label>Receipt No.</label>
+      <input id="f_receipt" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>Part No.</label>
+      <input id="f_partNo" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>Part Name</label>
+      <input id="f_partName" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>PO No.</label>
+      <input id="f_po" type="text" placeholder="Enter" />
+    </div>
+
+    <!-- Row 2: 3 filter items + action cell -->
+    <div class="filter-item">
+      <label>Status</label>
+      <select id="f_status">
+        <option value="">Select</option>
+        <option value="To be Received">To be Received</option>
+        <option value="Received">Received</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Delivery Warehouse</label>
+      <select id="f_deliveryWh">
+        <option value="">Select</option>
+        <option value="Nokian">Nokian</option>
+        <option value="Wheeltyre">Wheeltyre</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Received Time</label>
+      <div class="date-range">
+        <input id="f_rcv_start" type="date" />
+        <span class="sep">~</span>
+        <input id="f_rcv_end" type="date" />
+      </div>
+    </div>
+
+    <!-- Action cell (last grid cell of row 2, aligned right) -->
+    <div class="filter-actions-cell">
+      <button class="btn-reset" onclick="resetFilters()">Reset</button>
+      <button class="btn-search" onclick="applyFilters()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table Card -->
+<div class="table-card">
+  <div class="toolbar">
+    <button class="icon-btn" id="colSettingsBtn" title="Column Settings" onclick="toggleColSettings(event)">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
+    </button>
+    <button class="btn-export" onclick="exportData()">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export
+    </button>
+  </div>
+
+  <div class="col-settings-pop" id="colSettingsPop">
+    <h4>Column Settings</h4>
+    <div id="colSettingsList"></div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table" id="mainTable">
+      <thead>
+        <tr id="theadRow"></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span class="page-info" id="pageInfo">0-0 of 0 items</span>
+    <button id="prevPage" onclick="changePage(-1)">‹</button>
+    <button class="active" id="curPage">1</button>
+    <button id="nextPage" onclick="changePage(1)">›</button>
+    <select id="pageSize" onchange="changePageSize(this.value)">
+      <option value="10">10 / page</option>
+      <option value="20">20 / page</option>
+      <option value="50">50 / page</option>
+    </select>
+  </div>
+</div>
+
+<!-- Floating Feedback Button -->
+<div class="fab-feedback" title="Feedback">
+  <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+</div>
+
+<!-- Receive Modal -->
+<div class="modal-mask" id="receiveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Receipt No.</h2>
+      <span class="modal-close" onclick="closeModal()">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-filter">
+        <div class="m-item">
+          <label>Part No.</label>
+          <input id="m_partNo" type="text" placeholder="Enter" />
+        </div>
+        <div class="m-item">
+          <label>Part Name</label>
+          <input id="m_partName" type="text" placeholder="Enter" />
+        </div>
+        <div class="m-actions">
+          <button class="btn-reset" onclick="resetModalFilter()">Reset</button>
+          <button class="btn-search" onclick="applyModalFilter()">Search</button>
+        </div>
+      </div>
+
+      <div class="modal-table-wrap table-wrap">
+        <table class="data-table" id="modalTable">
+          <thead>
+            <tr>
+              <th class="col-no">No.</th>
+              <th>Part No.</th>
+              <th>Part Name</th>
+              <th>Delivered Qty</th>
+              <th>Received Qty</th>
+              <th>Discrepancy Qty</th>
+            </tr>
+          </thead>
+          <tbody id="modalTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span class="page-info" id="modalPageInfo">1-0 of 0 items per Page</span>
+        <button>‹</button>
+        <button class="active">1</button>
+        <button>›</button>
+        <select>
+          <option>10 / page</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-reset" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmReceive()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== Mock Data ============== */
+const MOCK_DATA = [
+  {
+    receiptNo: 'DN26052701', type: 'DN', status: 'To be Received',
+    buyer: 'XPeng European Holding B.V.', countOfParts: 3,
+    shippingWh: 'NDC', deliveryWh: 'Nokian',
+    poNos: ['PO1F02260527P01', 'PO1F02260527P02'],
+    shippingMethods: 'Sea', orderType: 'Stock',
+    etd: '2026-05-20', atd: '2026-05-21', eta: '2026-05-26', ata: '',
+    receivedTime: '', receivedBy: '',
+    parts: [
+      { partNo: 'WT100001', partName: 'Winter Tyre 235/55 R19', delivered: 20, received: 0 },
+      { partNo: 'WT100002', partName: 'Winter Tyre 245/45 R20', delivered: 16, received: 0 },
+      { partNo: 'WT100003', partName: 'TPMS Sensor Kit', delivered: 40, received: 0 }
+    ]
+  },
+  {
+    receiptNo: 'ASN26052702', type: 'ASN', status: 'Received',
+    buyer: 'XPeng European Holding B.V.', countOfParts: 2,
+    shippingWh: 'PDC', deliveryWh: 'Wheeltyre',
+    poNos: ['PO1F02260518E01'],
+    shippingMethods: 'Air', orderType: 'Urgent',
+    etd: '2026-05-15', atd: '2026-05-16', eta: '2026-05-22', ata: '2026-05-22',
+    receivedTime: '2026-05-22 14:35', receivedBy: 'Liu ZiHan',
+    parts: [
+      { partNo: 'WT100010', partName: 'Wheel Hub Assembly', delivered: 10, received: 10 },
+      { partNo: 'WT100011', partName: 'Brake Caliper', delivered: 8, received: 7 }
+    ]
+  },
+  {
+    receiptNo: 'DN26052703', type: 'DN', status: 'To be Received',
+    buyer: 'XPeng European Holding B.V.', countOfParts: 5,
+    shippingWh: 'HQ', deliveryWh: 'Nokian',
+    poNos: ['PO1F02260520P01', 'PO1F02260520P02', 'PO1F02260520P03'],
+    shippingMethods: 'Land', orderType: 'VOR',
+    etd: '2026-05-22', atd: '2026-05-23', eta: '2026-05-28', ata: '',
+    receivedTime: '', receivedBy: '',
+    parts: [
+      { partNo: 'WT100020', partName: 'Front Hood Vibration Damping Repair Kit', delivered: 4, received: 0 },
+      { partNo: 'WT100021', partName: 'Tyre Pressure Valve', delivered: 50, received: 0 }
+    ]
+  },
+  {
+    receiptNo: 'ASN26052704', type: 'ASN', status: 'Received',
+    buyer: 'XPeng European Holding B.V.', countOfParts: 1,
+    shippingWh: 'NDC', deliveryWh: 'Wheeltyre',
+    poNos: ['PO1F02260510E01'],
+    shippingMethods: 'Sea', orderType: 'Stock',
+    etd: '2026-05-05', atd: '2026-05-06', eta: '2026-05-12', ata: '2026-05-13',
+    receivedTime: '2026-05-13 09:18', receivedBy: 'Wang Jie',
+    parts: [
+      { partNo: 'WT100030', partName: 'Studded Winter Tyre 215/65 R17', delivered: 32, received: 32 }
+    ]
+  },
+  {
+    receiptNo: 'DN26052705', type: 'DN', status: 'To be Received',
+    buyer: 'XPeng European Holding B.V.', countOfParts: 4,
+    shippingWh: 'PDC', deliveryWh: 'Nokian',
+    poNos: ['PO1F02260525P01'],
+    shippingMethods: 'Air', orderType: 'Stock',
+    etd: '2026-05-23', atd: '', eta: '2026-05-29', ata: '',
+    receivedTime: '', receivedBy: '',
+    parts: [
+      { partNo: 'WT100040', partName: 'All-Season Tyre 225/60 R18', delivered: 24, received: 0 }
+    ]
+  }
+];
+
+/* ============== Column Definitions ============== */
+const COLUMNS = [
+  { key: 'no',              label: 'No.',                visible: true, render: (_, i) => (i + 1) },
+  { key: 'receiptNo',       label: 'Receipt No.',        visible: true, render: r => `<a class="receipt-link" onclick="goDetail('${r.receiptNo}')">${r.receiptNo}</a>` },
+  { key: 'status',          label: 'Status',             visible: true, render: r => esc(r.status) },
+  { key: 'buyer',           label: 'Buyer',              visible: true, render: r => esc(r.buyer) },
+  { key: 'countOfParts',    label: 'Count of Parts',     visible: true, render: r => r.countOfParts },
+  { key: 'shippingWh',      label: 'Shipping Warehouse', visible: true, render: r => r.shippingWh },
+  { key: 'deliveryWh',      label: 'Delivery Warehouse', visible: true, render: r => r.deliveryWh },
+  { key: 'poNos',           label: 'PO No.',             visible: true, render: r => `<div class="po-list">${r.poNos.map(p=>`<span>${esc(p)}</span>`).join('')}</div>` },
+  { key: 'shippingMethods', label: 'Shipping Methods',   visible: true, render: r => esc(r.shippingMethods) },
+  { key: 'orderType',       label: 'Order Type',         visible: true, render: r => esc(r.orderType) },
+  { key: 'etd',             label: 'ETD',                visible: true, render: r => fmtDate(r.etd) },
+  { key: 'atd',             label: 'ATD',                visible: true, render: r => fmtDate(r.atd) },
+  { key: 'eta',             label: 'ETA',                visible: true, render: r => fmtDate(r.eta) },
+  { key: 'ata',             label: 'ATA',                visible: true, render: r => fmtDate(r.ata) },
+  { key: 'receivedTime',    label: 'Received Time',      visible: true, render: r => fmtDateTime(r.receivedTime) },
+  { key: 'receivedBy',      label: 'Received By',        visible: true, render: r => esc(r.receivedBy) },
+  { key: 'action',          label: 'Action',             visible: true, render: r => actionCell(r) }
+];
+
+/* ============== Helpers ============== */
+function esc(v){ return v == null ? '' : String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtDate(d) {
+  if (!d) return '-';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dd = String(dt.getDate()).padStart(2,'0');
+  return `${dd} ${months[dt.getMonth()]}, ${dt.getFullYear()}`;
+}
+function fmtDateTime(s) {
+  if (!s) return '-';
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return s;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${m[3]} ${months[parseInt(m[2],10)-1]}, ${m[1]} ${m[4]}:${m[5]}`;
+}
+/* Action: simple blue inbox icon, only visible for "To be Received" */
+function actionCell(r) {
+  const canReceive = r.status === 'To be Received';
+  if (!canReceive) {
+    return `<div class="row-actions"></div>`;
+  }
+  return `<div class="row-actions">
+    <span class="ico" data-tip="Receive" onclick="openReceive('${r.receiptNo}')">
+      <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M3 8h18l-2 11a2 2 0 0 1-2 1.7H7a2 2 0 0 1-2-1.7L3 8z"/>
+        <path d="M3 8l3-5h12l3 5"/>
+        <path d="M9 12h6"/>
+      </svg>
+    </span>
+  </div>`;
+}
+
+/* ============== State ============== */
+let state = {
+  page: 1,
+  pageSize: 10,
+  filtered: [...MOCK_DATA],
+  currentReceipt: null,
+  modalParts: [],
+  modalFiltered: []
+};
+
+/* ============== Render Table ============== */
+function renderHead() {
+  const tr = document.getElementById('theadRow');
+  tr.innerHTML = COLUMNS.filter(c => c.visible).map(c => {
+    const cls = c.key === 'no' ? 'col-no' : (c.key === 'action' ? 'col-action' : '');
+    return `<th class="${cls}">${c.label}</th>`;
+  }).join('');
+}
+function renderBody() {
+  const tbody = document.getElementById('tbody');
+  const start = (state.page - 1) * state.pageSize;
+  const pageData = state.filtered.slice(start, start + state.pageSize);
+  if (pageData.length === 0) {
+    const colspan = COLUMNS.filter(c => c.visible).length;
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; padding:48px; color:#999;">No Data</td></tr>`;
+  } else {
+    tbody.innerHTML = pageData.map((r, i) => {
+      return `<tr>${COLUMNS.filter(c => c.visible).map(c => `<td>${c.render(r, start + i)}</td>`).join('')}</tr>`;
+    }).join('');
+  }
+  const total = state.filtered.length;
+  const from = total === 0 ? 0 : start + 1;
+  const to = Math.min(start + state.pageSize, total);
+  document.getElementById('pageInfo').textContent = `${from}-${to} of ${total} items`;
+  document.getElementById('curPage').textContent = state.page;
+  document.getElementById('prevPage').disabled = state.page === 1;
+  document.getElementById('nextPage').disabled = to >= total;
+}
+function renderTable() { renderHead(); renderBody(); }
+
+/* ============== Filters ============== */
+function applyFilters() {
+  const f = {
+    receipt: document.getElementById('f_receipt').value.trim().toLowerCase(),
+    partNo: document.getElementById('f_partNo').value.trim().toLowerCase(),
+    partName: document.getElementById('f_partName').value.trim().toLowerCase(),
+    po: document.getElementById('f_po').value.trim().toLowerCase(),
+    status: document.getElementById('f_status').value,
+    deliveryWh: document.getElementById('f_deliveryWh').value,
+    rcvStart: document.getElementById('f_rcv_start').value,
+    rcvEnd: document.getElementById('f_rcv_end').value
+  };
+  state.filtered = MOCK_DATA.filter(r => {
+    if (f.receipt && !r.receiptNo.toLowerCase().includes(f.receipt)) return false;
+    if (f.po && !r.poNos.some(p => p.toLowerCase().includes(f.po))) return false;
+    if (f.status && r.status !== f.status) return false;
+    if (f.deliveryWh && r.deliveryWh !== f.deliveryWh) return false;
+    if (f.partNo && !r.parts.some(p => p.partNo.toLowerCase().includes(f.partNo))) return false;
+    if (f.partName && !r.parts.some(p => p.partName.toLowerCase().includes(f.partName))) return false;
+    if (f.rcvStart && (!r.receivedTime || r.receivedTime.slice(0,10) < f.rcvStart)) return false;
+    if (f.rcvEnd && (!r.receivedTime || r.receivedTime.slice(0,10) > f.rcvEnd)) return false;
+    return true;
+  });
+  state.page = 1;
+  renderTable();
+}
+function resetFilters() {
+  ['f_receipt','f_partNo','f_partName','f_po','f_rcv_start','f_rcv_end'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_status').value = '';
+  document.getElementById('f_deliveryWh').value = '';
+  state.filtered = [...MOCK_DATA];
+  state.page = 1;
+  renderTable();
+}
+
+/* ============== Pagination ============== */
+function changePage(d) {
+  const total = state.filtered.length;
+  const maxPage = Math.max(1, Math.ceil(total / state.pageSize));
+  state.page = Math.min(Math.max(1, state.page + d), maxPage);
+  renderBody();
+}
+function changePageSize(v) {
+  state.pageSize = parseInt(v, 10);
+  state.page = 1;
+  renderBody();
+}
+
+/* ============== Column Settings ============== */
+function buildColSettings() {
+  const list = document.getElementById('colSettingsList');
+  list.innerHTML = COLUMNS.map((c, i) => `
+    <label>
+      <input type="checkbox" ${c.visible ? 'checked' : ''} onchange="toggleCol(${i}, this.checked)" />
+      ${c.label}
+    </label>
+  `).join('');
+}
+function toggleCol(i, v) { COLUMNS[i].visible = v; renderTable(); }
+function toggleColSettings(e) {
+  e.stopPropagation();
+  document.getElementById('colSettingsPop').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('colSettingsPop');
+  const btn = document.getElementById('colSettingsBtn');
+  if (pop.classList.contains('show') && !pop.contains(e.target) && !btn.contains(e.target)) {
+    pop.classList.remove('show');
+  }
+});
+
+/* ============== Export ============== */
+function pad(n){ return String(n).padStart(2,'0'); }
+function exportData() {
+  const now = new Date();
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const filename = `WinterTyreComponentsReceive${ts}.csv`;
+  const headers = COLUMNS.filter(c => c.visible && c.key !== 'action').map(c => c.label);
+  const rows = state.filtered.map((r, i) => {
+    return COLUMNS.filter(c => c.visible && c.key !== 'action').map(c => {
+      switch (c.key) {
+        case 'no': return i + 1;
+        case 'poNos': return `"${r.poNos.join('; ')}"`;
+        case 'receivedTime': return fmtDateTime(r.receivedTime);
+        case 'etd': case 'atd': case 'eta': case 'ata': return fmtDate(r[c.key]);
+        default: return `"${(r[c.key] ?? '').toString().replace(/"/g,'""')}"`;
+      }
+    }).join(',');
+  });
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============== Detail Navigation (placeholder) ============== */
+function goDetail(receiptNo) {
+  alert(`Navigate to detail page of ${receiptNo}`);
+}
+
+/* ============== Receive Modal ============== */
+function openReceive(receiptNo) {
+  const row = MOCK_DATA.find(r => r.receiptNo === receiptNo);
+  if (!row) return;
+  state.currentReceipt = row;
+  state.modalParts = row.parts.map(p => ({ ...p, received: p.received || p.delivered }));
+  state.modalFiltered = [...state.modalParts];
+  document.getElementById('modalTitle').textContent = `Receipt No. ${row.receiptNo}`;
+  document.getElementById('m_partNo').value = '';
+  document.getElementById('m_partName').value = '';
+  renderModalTable();
+  document.getElementById('receiveModal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('receiveModal').classList.remove('show');
+  state.currentReceipt = null;
+}
+function renderModalTable() {
+  const tbody = document.getElementById('modalTbody');
+  if (state.modalFiltered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:36px; color:#999;">No Data</td></tr>`;
+  } else {
+    tbody.innerHTML = state.modalFiltered.map((p, i) => {
+      // Discrepancy Qty = Delivered Qty - Received Qty
+      // (When Received decreases, Discrepancy increases)
+      const disc = p.delivered - (p.received || 0);
+      const idx = state.modalParts.indexOf(p);
+      return `<tr>
+        <td>${i + 1}</td>
+        <td>${esc(p.partNo)}</td>
+        <td>${esc(p.partName)}</td>
+        <td>${p.delivered}</td>
+        <td><input type="number" min="0" class="qty-input" value="${p.received}" onchange="updateReceived(${idx}, this.value)" /></td>
+        <td><input type="number" min="0" class="qty-input" value="${disc}" onchange="updateDiscrepancy(${idx}, this.value)" /></td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('modalPageInfo').textContent =
+    `1-${state.modalFiltered.length} of ${state.modalFiltered.length} items per Page`;
+}
+function updateReceived(idx, val) {
+  const v = parseInt(val, 10);
+  const part = state.modalParts[idx];
+  let received = isNaN(v) ? 0 : Math.max(0, v);
+  // Received cannot exceed Delivered
+  if (received > part.delivered) received = part.delivered;
+  part.received = received;
+  renderModalTable();
+}
+/* Allow editing Discrepancy Qty directly: Received = Delivered - Discrepancy */
+function updateDiscrepancy(idx, val) {
+  const v = parseInt(val, 10);
+  const part = state.modalParts[idx];
+  let disc = isNaN(v) ? 0 : Math.max(0, v);
+  if (disc > part.delivered) disc = part.delivered;
+  part.received = part.delivered - disc;
+  renderModalTable();
+}
+function applyModalFilter() {
+  const pn = document.getElementById('m_partNo').value.trim().toLowerCase();
+  const pname = document.getElementById('m_partName').value.trim().toLowerCase();
+  state.modalFiltered = state.modalParts.filter(p => {
+    if (pn && !p.partNo.toLowerCase().includes(pn)) return false;
+    if (pname && !p.partName.toLowerCase().includes(pname)) return false;
+    return true;
+  });
+  renderModalTable();
+}
+function resetModalFilter() {
+  document.getElementById('m_partNo').value = '';
+  document.getElementById('m_partName').value = '';
+  state.modalFiltered = [...state.modalParts];
+  renderModalTable();
+}
+function confirmReceive() {
+  if (!state.currentReceipt) return;
+  state.currentReceipt.parts = state.modalParts.map(p => ({ ...p }));
+  state.currentReceipt.status = 'Received';
+  const now = new Date();
+  state.currentReceipt.receivedTime =
+    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  state.currentReceipt.receivedBy = 'Current User';
+  state.currentReceipt.ata = state.currentReceipt.ata || `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  closeModal();
+  applyFilters();
+  alert('Receive confirmed.');
+}
+
+/* ============== Init ============== */
+buildColSettings();
+renderTable();
+</script>
+</body>
+</html>

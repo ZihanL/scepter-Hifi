@@ -1,0 +1,1105 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>External Inventory Sync</title>
+<style>
+/* ========== Reset & Base ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+background: #f5f6fa; color: #333; font-size: 14px;
+}
+
+/* ========== Tabs ========== */
+.tabs-bar {
+background: #fff; padding: 0 24px;
+border-bottom: 1px solid #e8e8e8;
+display: flex; gap: 0;
+}
+.tab-item {
+padding: 14px 20px; font-size: 14px; color: #666;
+cursor: pointer; border-bottom: 2px solid transparent;
+transition: all 0.2s; white-space: nowrap; user-select: none;
+}
+.tab-item:hover { color: #1890ff; }
+.tab-item.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
+
+/* ========== Tab Panels ========== */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ========== Filter Section ========== */
+.filter-section {
+background: #fff; margin: 16px 24px; border-radius: 8px;
+border: 1px solid #e8e8e8; padding: 20px 24px;
+}
+.filter-row {
+display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+}
+.filter-item { display: flex; flex-direction: column; gap: 6px; }
+.filter-item label {
+font-size: 13px; color: #333; font-weight: 500;
+}
+.filter-item label .required { color: #f5222d; margin-right: 2px; }
+.filter-item input,
+.filter-item select {
+height: 32px; padding: 0 10px; border: 1px solid #d9d9d9;
+border-radius: 6px; font-size: 13px; color: #333;
+background: #fff; outline: none; transition: border-color 0.2s;
+min-width: 180px;
+}
+.filter-item input:focus,
+.filter-item select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.filter-item input::placeholder { color: #bfbfbf; }
+
+/* Date range picker */
+.date-range {
+display: flex; align-items: center; gap: 6px; position: relative;
+}
+.date-range input[type="text"] { 
+min-width: 200px; 
+padding-right: 40px;
+}
+.date-range .cal-icon {
+position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+width: 24px; height: 24px; 
+display: flex; align-items: center; justify-content: center;
+cursor: pointer; color: #666; flex-shrink: 0;
+transition: color 0.2s;
+}
+.date-range .cal-icon:hover { color: #1890ff; }
+
+/* Date Range Picker Popup */
+.date-picker-popup {
+display: none;
+position: absolute;
+top: 100%;
+left: 0;
+margin-top: 4px;
+background: #fff;
+border: 1px solid #d9d9d9;
+border-radius: 8px;
+box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+padding: 16px;
+z-index: 1000;
+min-width: 600px;
+}
+.date-picker-popup.show { display: block; }
+
+.date-picker-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+.date-picker-nav {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.date-picker-nav button {
+width: 32px;
+height: 32px;
+border: 1px solid #d9d9d9;
+border-radius: 4px;
+background: #fff;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+color: #666;
+font-size: 16px;
+}
+.date-picker-nav button:hover {
+border-color: #1890ff;
+color: #1890ff;
+}
+.date-picker-nav .month-label {
+font-size: 14px;
+font-weight: 500;
+min-width: 100px;
+text-align: center;
+}
+
+.date-picker-calendars {
+display: flex;
+gap: 24px;
+}
+.date-picker-calendar {
+flex: 1;
+}
+.calendar-weekdays {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 4px;
+margin-bottom: 8px;
+}
+.calendar-weekday {
+text-align: center;
+font-size: 12px;
+font-weight: 500;
+color: #666;
+padding: 8px 0;
+}
+.calendar-days {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 4px;
+}
+.calendar-day {
+aspect-ratio: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 13px;
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.2s;
+}
+.calendar-day:hover {
+background: #f0f5ff;
+}
+.calendar-day.other-month {
+color: #bfbfbf;
+}
+.calendar-day.selected {
+background: #1890ff;
+color: #fff;
+}
+.calendar-day.in-range {
+background: #e6f7ff;
+}
+.calendar-day.today {
+border: 1px solid #1890ff;
+}
+
+/* Filter action buttons */
+.filter-actions {
+display: flex; gap: 10px; align-items: flex-end; margin-left: auto;
+}
+.btn-reset {
+height: 32px; padding: 0 16px; border: 1px solid #d9d9d9;
+border-radius: 6px; background: #fff; cursor: pointer;
+font-size: 13px; color: #333; transition: all 0.2s;
+}
+.btn-reset:hover { border-color: #1890ff; color: #1890ff; }
+.btn-search {
+height: 32px; padding: 0 20px; border: none;
+border-radius: 6px; background: #1890ff; color: #fff;
+cursor: pointer; font-size: 13px; transition: background 0.2s;
+}
+.btn-search:hover { background: #40a9ff; }
+
+/* ========== Overview Cards ========== */
+.cards-section {
+margin: 0 24px 16px; display: grid;
+grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.card {
+background: #fff; border-radius: 8px; border: 1px solid #e8e8e8;
+padding: 0; overflow: hidden;
+}
+.card-header {
+padding: 14px 20px; font-size: 13px; font-weight: 500; color: #555;
+border-bottom: 1px solid #f0f0f0; background: #fafafa;
+}
+.card-body {
+padding: 20px 20px 24px;
+}
+.card-value {
+font-size: 22px; font-weight: 600; color: #333;
+}
+/* Clickable card value */
+.card-value.clickable {
+color: #1890ff; cursor: pointer; text-decoration: none;
+display: inline-block;
+}
+.card-value.clickable:hover { text-decoration: underline; }
+
+/* Second row cards (variance) */
+.cards-section-row2 {
+margin: 0 24px 16px; display: grid;
+grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+
+/* ========== Specifics Toolbar ========== */
+.toolbar {
+background: #fff; margin: 0 24px 0; border-radius: 8px 8px 0 0;
+border: 1px solid #e8e8e8; border-bottom: none;
+padding: 12px 20px;
+display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+}
+.btn-icon {
+width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 6px;
+background: #fff; cursor: pointer; display: flex; align-items: center;
+justify-content: center; color: #555; transition: all 0.2s;
+}
+.btn-icon:hover { border-color: #1890ff; color: #1890ff; }
+.btn-export {
+height: 32px; padding: 0 16px; border: none;
+border-radius: 6px; background: #1890ff; color: #fff;
+cursor: pointer; font-size: 13px; transition: background 0.2s;
+}
+.btn-export:hover { background: #40a9ff; }
+
+/* ========== Table ========== */
+.table-section {
+margin: 0 24px 24px; background: #fff;
+border-radius: 0 0 8px 8px; border: 1px solid #e8e8e8;
+overflow: hidden;
+}
+.table-wrap { overflow-x: auto; }
+table {
+width: 100%; border-collapse: collapse; min-width: 900px;
+}
+thead tr { background: #fafafa; }
+th {
+padding: 12px 14px; text-align: left; font-size: 13px;
+font-weight: 500; color: #555; border-bottom: 1px solid #e8e8e8;
+white-space: nowrap;
+}
+td {
+padding: 12px 14px; font-size: 13px; color: #333;
+border-bottom: 1px solid #f0f0f0; vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f5f8ff; }
+.td-no { color: #999; width: 50px; }
+
+/* ========== Pagination ========== */
+.pagination {
+display: flex; align-items: center; justify-content: flex-end;
+padding: 14px 20px; gap: 6px; border-top: 1px solid #f0f0f0;
+flex-wrap: wrap;
+}
+.pagination .total-text { font-size: 13px; color: #666; margin-right: 8px; }
+.page-btn {
+min-width: 32px; height: 32px; padding: 0 8px;
+border: 1px solid #d9d9d9; border-radius: 6px;
+background: #fff; cursor: pointer; font-size: 13px; color: #333;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+}
+.page-btn:hover { border-color: #1890ff; color: #1890ff; }
+.page-btn.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+.page-btn:disabled { color: #d9d9d9; cursor: not-allowed; }
+.page-size-select {
+height: 32px; padding: 0 8px; border: 1px solid #d9d9d9;
+border-radius: 6px; font-size: 13px; color: #333; background: #fff;
+cursor: pointer; outline: none;
+}
+
+/* ========== Column Setting Modal ========== */
+.modal-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.35); z-index: 1000;
+align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+background: #fff; border-radius: 8px; width: 360px; max-width: 95vw;
+box-shadow: 0 8px 32px rgba(0,0,0,0.18); overflow: hidden;
+}
+.modal-header {
+padding: 16px 20px; font-size: 15px; font-weight: 600;
+border-bottom: 1px solid #e8e8e8;
+display: flex; align-items: center; justify-content: space-between;
+}
+.modal-close {
+width: 24px; height: 24px; border: none; background: none;
+cursor: pointer; font-size: 18px; color: #999; line-height: 1;
+display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { color: #333; }
+.modal-body { padding: 16px 20px; max-height: 60vh; overflow-y: auto; }
+.col-setting-item {
+display: flex; align-items: center; gap: 10px;
+padding: 8px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;
+}
+.col-setting-item:last-child { border-bottom: none; }
+.col-setting-item input[type="checkbox"] {
+width: 16px; height: 16px; cursor: pointer; accent-color: #1890ff;
+}
+.col-setting-item span { font-size: 13px; color: #333; }
+.modal-footer {
+padding: 12px 20px; border-top: 1px solid #e8e8e8;
+display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* ========== Toast ========== */
+.toast {
+position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+background: rgba(0,0,0,0.75); color: #fff; padding: 10px 24px;
+border-radius: 20px; font-size: 13px; z-index: 2000;
+opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+.cards-section,
+.cards-section-row2 { grid-template-columns: repeat(2, 1fr); }
+.filter-actions { margin-left: 0; width: 100%; }
+}
+@media (max-width: 600px) {
+.tabs-bar { padding: 0 16px; }
+.filter-section { margin: 12px 12px; padding: 14px 16px; }
+.cards-section,
+.cards-section-row2 { margin: 0 12px 12px; grid-template-columns: 1fr; }
+.toolbar { margin: 0 12px 0; }
+.table-section { margin: 0 12px 16px; }
+.filter-item input,
+.filter-item select { min-width: 140px; }
+.date-range input { min-width: 100px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Tabs ========== -->
+<div class="tabs-bar">
+<div class="tab-item active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+<div class="tab-item" data-tab="specifics" onclick="switchTab('specifics')">Specifics</div>
+</div>
+
+<!-- ================================================================
+TAB: OVERVIEW
+================================================================ -->
+<div id="tab-overview" class="tab-panel active">
+
+<!-- Filter -->
+<div class="filter-section">
+<div class="filter-row">
+<div class="filter-item">
+<label><span class="required">*</span>External Supplier</label>
+<select id="ov-supplier">
+<option value="Nokian">Nokian</option>
+</select>
+</div>
+<div class="filter-actions">
+<button class="btn-reset" onclick="resetOverview()">Reset</button>
+<button class="btn-search" onclick="searchOverview()">Search</button>
+</div>
+</div>
+</div>
+
+<!-- Info Cards Row 1 -->
+<div class="cards-section">
+<!-- Sync Batch No. -->
+<div class="card">
+<div class="card-header">Sync Batch No.</div>
+<div class="card-body">
+<span class="card-value clickable" onclick="jumpToSpecifics('batchNo', 'SYNC1F0226050007')" title="Click to view in Specifics">SYNC1F0226050007</span>
+</div>
+</div>
+
+<!-- Sync Time -->
+<div class="card">
+<div class="card-header">Sync Time</div>
+<div class="card-body">
+<span class="card-value clickable" onclick="jumpToSpecifics('syncTime', '2026-05-08')" title="Click to view in Specifics">08 May, 2026 01:05:18</span>
+</div>
+</div>
+
+<!-- Total SKUs Synced -->
+<div class="card">
+<div class="card-header">Total SKUs Synced</div>
+<div class="card-body">
+<span class="card-value">8,410</span>
+</div>
+</div>
+</div>
+
+<!-- Info Cards Row 2 -->
+<div class="cards-section-row2">
+<!-- Variance -->
+<div class="card">
+<div class="card-header">Variance Between Nokian and ERP (Available Qty)</div>
+<div class="card-body">
+<span class="card-value">648</span>
+</div>
+</div>
+<!-- Placeholder cards to keep grid alignment -->
+<div></div>
+<div></div>
+</div>
+
+</div>
+<!-- /tab-overview -->
+
+<!-- ================================================================
+TAB: SPECIFICS
+================================================================ -->
+<div id="tab-specifics" class="tab-panel">
+
+<!-- Filter -->
+<div class="filter-section">
+<div class="filter-row" style="row-gap:14px;">
+<!-- Row 1 -->
+<div class="filter-item">
+<label>Sync Batch No.</label>
+<input type="text" id="sp-batchNo" placeholder="Enter">
+</div>
+<div class="filter-item">
+<label>Part No.</label>
+<input type="text" id="sp-partNo" placeholder="Enter">
+</div>
+<div class="filter-item">
+<label>Part Name</label>
+<input type="text" id="sp-partName" placeholder="Enter">
+</div>
+<div class="filter-item">
+<label>Sync Time</label>
+<div class="date-range">
+<input type="text" id="sp-timeRange" placeholder="From → To" readonly style="cursor: pointer;" onclick="toggleDatePicker()">
+<div class="cal-icon" onclick="toggleDatePicker()">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<rect x="3" y="4" width="18" height="18" rx="2"/>
+<line x1="16" y1="2" x2="16" y2="6"/>
+<line x1="8" y1="2" x2="8" y2="6"/>
+<line x1="3" y1="10" x2="21" y2="10"/>
+</svg>
+</div>
+<div class="date-picker-popup" id="date-picker-popup">
+<div class="date-picker-header">
+<div class="date-picker-nav">
+<button onclick="changeMonth(-2)">«</button>
+<button onclick="changeMonth(-1)">‹</button>
+<span class="month-label" id="month-label-1"></span>
+</div>
+<div class="date-picker-nav">
+<span class="month-label" id="month-label-2"></span>
+<button onclick="changeMonth(1)">›</button>
+<button onclick="changeMonth(2)">»</button>
+</div>
+</div>
+<div class="date-picker-calendars">
+<div class="date-picker-calendar" id="calendar-1"></div>
+<div class="date-picker-calendar" id="calendar-2"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="filter-item">
+<label>External Supplier</label>
+<select id="sp-supplier">
+<option value="Nokian">Nokian</option>
+</select>
+</div>
+<div class="filter-actions">
+<button class="btn-reset" onclick="resetSpecifics()">Reset</button>
+<button class="btn-search" onclick="searchSpecifics()">Search</button>
+</div>
+</div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+<!-- Column Setting icon -->
+<button class="btn-icon" title="Column Setting" onclick="openColSetting()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<line x1="4" y1="6" x2="20" y2="6"/>
+<line x1="4" y1="12" x2="20" y2="12"/>
+<line x1="4" y1="18" x2="20" y2="18"/>
+<circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/>
+<circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/>
+<circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="btn-export" onclick="exportData()">Export</button>
+</div>
+
+<!-- Table -->
+<div class="table-section">
+<div class="table-wrap">
+<table id="specifics-table">
+<thead>
+<tr>
+<th class="td-no">No.</th>
+<th data-col="batchNo">Sync Batch No.</th>
+<th data-col="partNo">Part No.</th>
+<th data-col="partName">Part Name</th>
+<th data-col="supplier">External Supplier</th>
+<th data-col="qtySupplier">Available Qty (Supplier)</th>
+<th data-col="qtyErp">Available Qty (ERP)</th>
+<th data-col="discrepancy">Discrepancy (ERP)</th>
+<th data-col="totalErp">Total (ERP)</th>
+<th data-col="syncTime">Sync Time</th>
+</tr>
+</thead>
+<tbody id="specifics-tbody">
+<!-- Populated by JS -->
+</tbody>
+</table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+<span class="total-text" id="total-text">Total 0 items</span>
+<button class="page-btn" id="btn-prev" onclick="changePage(-1)">&#8249;</button>
+<div id="page-nums" style="display:flex;gap:6px;"></div>
+<button class="page-btn" id="btn-next" onclick="changePage(1)">&#8250;</button>
+<select class="page-size-select" id="page-size" onchange="changePageSize()">
+<option value="10">10 / page</option>
+<option value="20">20 / page</option>
+<option value="50">50 / page</option>
+</select>
+</div>
+</div>
+
+</div>
+<!-- /tab-specifics -->
+
+<!-- ========== Column Setting Modal ========== -->
+<div class="modal-overlay" id="col-modal">
+<div class="modal">
+<div class="modal-header">
+Column Setting
+<button class="modal-close" onclick="closeColSetting()">×</button>
+</div>
+<div class="modal-body" id="col-modal-body">
+<!-- Populated by JS -->
+</div>
+<div class="modal-footer">
+<button class="btn-reset" onclick="closeColSetting()">Cancel</button>
+<button class="btn-search" onclick="applyColSetting()">Apply</button>
+</div>
+</div>
+</div>
+
+<!-- ========== Toast ========== -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+DATA — Mock dataset (冬胎零散件 / Winter tyre spare parts)
+================================================================ */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** Format date → "dd MMM, yyyy HH:mm" */
+function fmtDate(d) {
+const dt = new Date(d);
+const dd = String(dt.getDate()).padStart(2,'0');
+const mmm = MONTHS[dt.getMonth()];
+const yyyy = dt.getFullYear();
+const hh = String(dt.getHours()).padStart(2,'0');
+const mm = String(dt.getMinutes()).padStart(2,'0');
+return `${dd} ${mmm}, ${yyyy} ${hh}:${mm}`;
+}
+
+/** Generate mock rows */
+function genRows() {
+const parts = [
+['8205001DF1-00-03','Winter Tyre 205/55R16'],
+['8205001ED1-00-03','Winter Tyre 225/45R17'],
+['6210110DC2-A1-01','Winter Tyre 235/40R18'],
+['4040100DB1-ZZ-01','Winter Tyre Rim 16"'],
+['8205002AA1-00-01','Winter Tyre 195/65R15'],
+['8205003BC2-00-02','Winter Tyre 215/60R16'],
+['7301001XA1-00-01','Tyre Valve Winter'],
+['8205004CD3-00-03','Winter Tyre 245/45R18'],
+['8205005EF1-00-01','Winter Tyre 205/60R16'],
+['6210111GH2-B1-02','Winter Tyre Rim 17"'],
+['8205006IJ1-00-02','Winter Tyre 225/50R17'],
+['4040101KL1-ZZ-02','Winter Tyre Rim 18"'],
+['8205007MN2-00-01','Winter Tyre 235/45R17'],
+['7301002OP1-00-01','Tyre Pressure Sensor'],
+['8205008QR3-00-03','Winter Tyre 255/40R19'],
+['8205009ST1-00-01','Winter Tyre 205/55R17'],
+['6210112UV2-C1-01','Winter Tyre Rim 19"'],
+['8205010WX1-00-02','Winter Tyre 215/55R17'],
+['4040102YZ1-ZZ-01','Winter Tyre Rim 15"'],
+['8205011AB2-00-03','Winter Tyre 225/40R18'],
+];
+const batches = ['SYNC1F0226050007','SYNC1F0226050006','SYNC1F0226050005'];
+const rows = [];
+parts.forEach((p, i) => {
+const batchIdx = Math.floor(i / 7);
+const qtyS = 100 + Math.floor(Math.random() * 900);
+const qtyE = qtyS - Math.floor(Math.random() * 50);
+const disc = Math.floor(Math.random() * 20);
+const total = qtyE + disc;
+const syncTs = new Date('2026-05-08T01:05:18');
+syncTs.setDate(syncTs.getDate() - batchIdx);
+rows.push({
+batchNo: batches[batchIdx] || batches[0],
+partNo: p[0],
+partName: p[1],
+supplier: 'Nokian',
+qtySupplier: qtyS,
+qtyErp: qtyE,
+discrepancy: disc,
+totalErp: total,
+syncTime: syncTs.toISOString(),
+});
+});
+return rows;
+}
+
+const ALL_DATA = genRows();
+let filteredData = [...ALL_DATA];
+let currentPage = 1;
+let pageSize = 10;
+
+// Date picker state
+let datePickerMonth1 = new Date();
+let datePickerMonth2 = new Date();
+let selectedFromDate = null;
+let selectedToDate = null;
+let isSelectingRange = false;
+
+/* ================================================================
+COLUMNS config
+================================================================ */
+const COLUMNS = [
+{ key: 'batchNo',     label: 'Sync Batch No.',          visible: true },
+{ key: 'partNo',      label: 'Part No.',                visible: true },
+{ key: 'partName',    label: 'Part Name',               visible: true },
+{ key: 'supplier',    label: 'External Supplier',       visible: true },
+{ key: 'qtySupplier', label: 'Available Qty (Supplier)',visible: true },
+{ key: 'qtyErp',      label: 'Available Qty (ERP)',     visible: true },
+{ key: 'discrepancy', label: 'Discrepancy (ERP)',       visible: true },
+{ key: 'totalErp',    label: 'Total (ERP)',             visible: true },
+{ key: 'syncTime',    label: 'Sync Time',               visible: true },
+];
+
+/* ================================================================
+TAB SWITCHING
+================================================================ */
+function switchTab(tab) {
+document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+document.getElementById(`tab-${tab}`).classList.add('active');
+if (tab === 'specifics') {
+renderTable();
+}
+}
+
+/* ================================================================
+OVERVIEW — Reset / Search
+================================================================ */
+function resetOverview() {
+document.getElementById('ov-supplier').value = 'Nokian';
+}
+
+function searchOverview() {
+showToast('Overview refreshed');
+}
+
+/* ================================================================
+JUMP from Overview card → Specifics with pre-filled filter
+================================================================ */
+function jumpToSpecifics(field, value) {
+switchTab('specifics');
+if (field === 'batchNo') {
+document.getElementById('sp-batchNo').value = value;
+} else if (field === 'syncTime') {
+// Fill date range with the sync date
+selectedFromDate = new Date(value);
+selectedToDate = new Date(value);
+updateDateRangeDisplay();
+}
+searchSpecifics();
+}
+
+/* ================================================================
+DATE PICKER
+================================================================ */
+function toggleDatePicker() {
+const popup = document.getElementById('date-picker-popup');
+const isVisible = popup.classList.contains('show');
+if (isVisible) {
+popup.classList.remove('show');
+} else {
+datePickerMonth1 = new Date();
+datePickerMonth2 = new Date(datePickerMonth1);
+datePickerMonth2.setMonth(datePickerMonth2.getMonth() + 1);
+renderDatePicker();
+popup.classList.add('show');
+}
+}
+
+function changeMonth(delta) {
+datePickerMonth1.setMonth(datePickerMonth1.getMonth() + delta);
+datePickerMonth2 = new Date(datePickerMonth1);
+datePickerMonth2.setMonth(datePickerMonth2.getMonth() + 1);
+renderDatePicker();
+}
+
+function renderDatePicker() {
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+// Update month labels
+document.getElementById('month-label-1').textContent = 
+`${months[datePickerMonth1.getMonth()]} ${datePickerMonth1.getFullYear()}`;
+document.getElementById('month-label-2').textContent = 
+`${months[datePickerMonth2.getMonth()]} ${datePickerMonth2.getFullYear()}`;
+
+// Render both calendars
+renderCalendar('calendar-1', datePickerMonth1);
+renderCalendar('calendar-2', datePickerMonth2);
+}
+
+function renderCalendar(containerId, month) {
+const container = document.getElementById(containerId);
+const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+let html = '<div class="calendar-weekdays">';
+weekdays.forEach(day => {
+html += `<div class="calendar-weekday">${day}</div>`;
+});
+html += '</div><div class="calendar-days">';
+
+const year = month.getFullYear();
+const monthNum = month.getMonth();
+const firstDay = new Date(year, monthNum, 1).getDay();
+const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
+const daysInPrevMonth = new Date(year, monthNum, 0).getDate();
+
+// Previous month days
+for (let i = firstDay - 1; i >= 0; i--) {
+const day = daysInPrevMonth - i;
+html += `<div class="calendar-day other-month">${day}</div>`;
+}
+
+// Current month days
+for (let day = 1; day <= daysInMonth; day++) {
+const date = new Date(year, monthNum, day);
+date.setHours(0, 0, 0, 0);
+let classes = 'calendar-day';
+
+if (date.getTime() === today.getTime()) {
+classes += ' today';
+}
+
+if (selectedFromDate && date.getTime() === selectedFromDate.getTime()) {
+classes += ' selected';
+}
+if (selectedToDate && date.getTime() === selectedToDate.getTime()) {
+classes += ' selected';
+}
+if (selectedFromDate && selectedToDate && 
+date > selectedFromDate && date < selectedToDate) {
+classes += ' in-range';
+}
+
+html += `<div class="${classes}" onclick="selectDate(${year}, ${monthNum}, ${day})">${day}</div>`;
+}
+
+// Next month days
+const totalCells = firstDay + daysInMonth;
+const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+for (let day = 1; day <= remainingCells; day++) {
+html += `<div class="calendar-day other-month">${day}</div>`;
+}
+
+html += '</div>';
+container.innerHTML = html;
+}
+
+function selectDate(year, month, day) {
+const date = new Date(year, month, day);
+date.setHours(0, 0, 0, 0);
+
+if (!selectedFromDate || (selectedFromDate && selectedToDate)) {
+// Start new selection
+selectedFromDate = date;
+selectedToDate = null;
+isSelectingRange = true;
+} else {
+// Complete the range
+if (date < selectedFromDate) {
+selectedToDate = selectedFromDate;
+selectedFromDate = date;
+} else {
+selectedToDate = date;
+}
+isSelectingRange = false;
+updateDateRangeDisplay();
+toggleDatePicker();
+}
+renderDatePicker();
+}
+
+function updateDateRangeDisplay() {
+const display = document.getElementById('sp-timeRange');
+if (selectedFromDate && selectedToDate) {
+const formatDate = (d) => {
+const year = d.getFullYear();
+const month = String(d.getMonth() + 1).padStart(2, '0');
+const day = String(d.getDate()).padStart(2, '0');
+return `${year}-${month}-${day}`;
+};
+display.value = `${formatDate(selectedFromDate)} → ${formatDate(selectedToDate)}`;
+} else if (selectedFromDate) {
+const formatDate = (d) => {
+const year = d.getFullYear();
+const month = String(d.getMonth() + 1).padStart(2, '0');
+const day = String(d.getDate()).padStart(2, '0');
+return `${year}-${month}-${day}`;
+};
+display.value = `${formatDate(selectedFromDate)} → To`;
+} else {
+display.value = '';
+display.placeholder = 'From → To';
+}
+}
+
+/* ================================================================
+SPECIFICS — Reset / Search
+================================================================ */
+function resetSpecifics() {
+document.getElementById('sp-batchNo').value = '';
+document.getElementById('sp-partNo').value = '';
+document.getElementById('sp-partName').value = '';
+selectedFromDate = null;
+selectedToDate = null;
+document.getElementById('sp-timeRange').value = '';
+document.getElementById('sp-timeRange').placeholder = 'From → To';
+document.getElementById('sp-supplier').value = 'Nokian';
+filteredData = [...ALL_DATA];
+currentPage = 1;
+renderTable();
+}
+
+function searchSpecifics() {
+const batchNo   = document.getElementById('sp-batchNo').value.trim().toLowerCase();
+const partNo    = document.getElementById('sp-partNo').value.trim().toLowerCase();
+const partName  = document.getElementById('sp-partName').value.trim().toLowerCase();
+const supplier  = document.getElementById('sp-supplier').value;
+
+filteredData = ALL_DATA.filter(row => {
+if (batchNo  && !row.batchNo.toLowerCase().includes(batchNo))   return false;
+if (partNo   && !row.partNo.toLowerCase().includes(partNo))     return false;
+if (partName && !row.partName.toLowerCase().includes(partName)) return false;
+if (supplier && row.supplier !== supplier)                       return false;
+if (selectedFromDate) {
+const rowDate = new Date(row.syncTime);
+rowDate.setHours(0, 0, 0, 0);
+if (rowDate < selectedFromDate) return false;
+}
+if (selectedToDate) {
+const rowDate = new Date(row.syncTime);
+rowDate.setHours(0, 0, 0, 0);
+if (rowDate > selectedToDate) return false;
+}
+return true;
+});
+currentPage = 1;
+renderTable();
+}
+
+/* ================================================================
+TABLE RENDER
+================================================================ */
+function renderTable() {
+const tbody = document.getElementById('specifics-tbody');
+const thead = document.querySelector('#specifics-table thead tr');
+const visibleCols = COLUMNS.filter(c => c.visible);
+
+// Update header visibility
+thead.querySelectorAll('th[data-col]').forEach(th => {
+const col = th.getAttribute('data-col');
+const isVisible = visibleCols.some(c => c.key === col);
+th.style.display = isVisible ? '' : 'none';
+});
+
+// Clear tbody
+tbody.innerHTML = '';
+
+// Pagination
+const start = (currentPage - 1) * pageSize;
+const end = Math.min(start + pageSize, filteredData.length);
+const pageData = filteredData.slice(start, end);
+
+if (pageData.length === 0) {
+const tr = document.createElement('tr');
+const td = document.createElement('td');
+td.colSpan = visibleCols.length + 1; // +1 for No. column
+td.style.textAlign = 'center';
+td.style.color = '#999';
+td.style.padding = '32px';
+td.textContent = 'No data';
+tr.appendChild(td);
+tbody.appendChild(tr);
+} else {
+pageData.forEach((row, idx) => {
+const tr = document.createElement('tr');
+
+// No. column
+const tdNo = document.createElement('td');
+tdNo.className = 'td-no';
+tdNo.textContent = start + idx + 1;
+tr.appendChild(tdNo);
+
+// Data columns
+visibleCols.forEach(col => {
+const td = document.createElement('td');
+if (col.key === 'syncTime') {
+td.textContent = fmtDate(row[col.key]);
+} else {
+td.textContent = row[col.key] || '-';
+}
+tr.appendChild(td);
+});
+
+tbody.appendChild(tr);
+});
+}
+
+renderPagination();
+}
+
+/* ================================================================
+PAGINATION
+================================================================ */
+function renderPagination() {
+const total = filteredData.length;
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+document.getElementById('total-text').textContent = `Total ${total} items`;
+
+const prevBtn = document.getElementById('btn-prev');
+const nextBtn = document.getElementById('btn-next');
+prevBtn.disabled = currentPage <= 1;
+nextBtn.disabled = currentPage >= totalPages;
+
+const numsDiv = document.getElementById('page-nums');
+numsDiv.innerHTML = '';
+
+const start = Math.max(1, currentPage - 2);
+const end = Math.min(totalPages, start + 4);
+
+for (let i = start; i <= end; i++) {
+const btn = document.createElement('button');
+btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+btn.textContent = i;
+btn.onclick = () => { currentPage = i; renderTable(); };
+numsDiv.appendChild(btn);
+}
+}
+
+function changePage(dir) {
+const total = filteredData.length;
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+currentPage = Math.max(1, Math.min(totalPages, currentPage + dir));
+renderTable();
+}
+
+function changePageSize() {
+pageSize = parseInt(document.getElementById('page-size').value);
+currentPage = 1;
+renderTable();
+}
+
+/* ================================================================
+COLUMN SETTING MODAL
+================================================================ */
+function openColSetting() {
+const body = document.getElementById('col-modal-body');
+body.innerHTML = '';
+COLUMNS.forEach((col, idx) => {
+const item = document.createElement('div');
+item.className = 'col-setting-item';
+item.innerHTML = `
+<input type="checkbox" id="col-chk-${idx}" ${col.visible ? 'checked' : ''}>
+<span>${col.label}</span>
+`;
+body.appendChild(item);
+});
+document.getElementById('col-modal').classList.add('show');
+}
+
+function closeColSetting() {
+document.getElementById('col-modal').classList.remove('show');
+}
+
+function applyColSetting() {
+COLUMNS.forEach((col, idx) => {
+const chk = document.getElementById(`col-chk-${idx}`);
+if (chk) col.visible = chk.checked;
+});
+closeColSetting();
+renderTable();
+showToast('Column settings applied');
+}
+
+/* ================================================================
+EXPORT
+================================================================ */
+function exportData() {
+const visibleCols = COLUMNS.filter(c => c.visible);
+const headers = ['No.', ...visibleCols.map(c => c.label)];
+const rows = [headers.join(',')];
+
+filteredData.forEach((row, idx) => {
+const cells = [idx + 1];
+visibleCols.forEach(col => {
+let val = row[col.key] || '';
+if (col.key === 'syncTime') {
+val = fmtDate(val);
+}
+val = String(val).replace(/"/g, '""');
+if (val.includes(',') || val.includes('"')) {
+val = `"${val}"`;
+}
+cells.push(val);
+});
+rows.push(cells.join(','));
+});
+
+const csv = '\uFEFF' + rows.join('\r\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const url = URL.createObjectURL(blob);
+
+const now = new Date();
+const pad = n => String(n).padStart(2, '0');
+const ts = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
+pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+
+const a = document.createElement('a');
+a.href = url;
+a.download = `ExternalInventorySync${ts}.csv`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+
+showToast('Export successful');
+}
+
+/* ================================================================
+TOAST
+================================================================ */
+function showToast(msg) {
+const toast = document.getElementById('toast');
+toast.textContent = msg;
+toast.classList.add('show');
+setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+/* ================================================================
+INIT
+================================================================ */
+window.onload = function() {
+filteredData = [...ALL_DATA];
+renderTable();
+
+// Close date picker when clicking outside
+document.addEventListener('click', function(e) {
+const popup = document.getElementById('date-picker-popup');
+const dateRange = e.target.closest('.date-range');
+if (!dateRange && popup.classList.contains('show')) {
+popup.classList.remove('show');
+}
+});
+};
+</script>
+</body>
+</html>
