@@ -946,6 +946,15 @@ td.textContent = fmtDate(row[col.key]);
 } else {
 td.textContent = row[col.key] || '-';
 }
+
+// Highlight mismatched quantities in red
+if (col.key === 'qtySupplier' || col.key === 'qtyErp') {
+if (row.qtySupplier !== row.qtyErp) {
+td.style.setProperty('color', '#f5222d', 'important');
+td.style.setProperty('font-weight', '600', 'important');
+}
+}
+
 tr.appendChild(td);
 });
 

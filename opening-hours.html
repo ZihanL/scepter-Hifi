@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opening Hours</title>
+<style>
+/* ========== Reset & Base ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f6fa; color: #333; font-size: 14px; }
+
+/* ========== Top Navigation Bar ========== */
+.top-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff; height: 48px; padding: 0 16px;
+  border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 100;
+}
+.top-nav-left { display: flex; align-items: center; gap: 12px; }
+.top-nav-left .home-icon { font-size: 18px; color: #666; cursor: pointer; }
+.top-nav-left .page-title { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #333; }
+.top-nav-left .page-title .clock-icon { color: #1890ff; }
+.top-nav-right { display: flex; align-items: center; gap: 16px; }
+.top-nav-right .search-box {
+  display: flex; align-items: center; gap: 6px; background: #f5f5f5;
+  border-radius: 6px; padding: 6px 12px; font-size: 13px; color: #999;
+}
+.top-nav-right .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666; }
+.top-nav-right .avatar { width: 28px; height: 28px; border-radius: 50%; background: #1890ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+/* ========== Main Layout ========== */
+.main-container { display: flex; height: calc(100vh - 48px); }
+
+/* ========== Left Panel: Setting ========== */
+.left-panel {
+  width: 280px; min-width: 280px; background: #fff; border-right: 1px solid #e8e8e8;
+  padding: 16px; overflow-y: auto; flex-shrink: 0;
+}
+.left-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.left-header h2 { font-size: 16px; font-weight: 600; }
+.left-header .btn-group { display: flex; gap: 8px; }
+.btn-cancel {
+  padding: 6px 16px; border: 1px solid #d9d9d9; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 13px; color: #333;
+}
+.btn-cancel:hover { border-color: #1890ff; color: #1890ff; }
+.btn-save {
+  padding: 6px 16px; border: none; border-radius: 6px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px;
+}
+.btn-save:hover { background: #40a9ff; }
+
+/* Day Row */
+.day-row { margin-bottom: 16px; }
+.day-row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.day-label { font-size: 14px; font-weight: 500; }
+
+/* Toggle Switch */
+.toggle { position: relative; width: 40px; height: 22px; cursor: pointer; }
+.toggle input { display: none; }
+.toggle-slider {
+  position: absolute; inset: 0; background: #ccc; border-radius: 22px; transition: .3s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px;
+  background: #fff; border-radius: 50%; transition: .3s;
+}
+.toggle input:checked + .toggle-slider { background: #1890ff; }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* Time Slots */
+.time-slots { display: flex; flex-direction: column; gap: 8px; }
+.time-slot { display: flex; align-items: center; gap: 6px; }
+.time-input {
+  width: 70px; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px;
+  font-size: 13px; text-align: center; outline: none;
+}
+.time-input:focus { border-color: #1890ff; }
+.time-sep { color: #999; font-size: 13px; }
+.btn-icon {
+  width: 28px; height: 28px; border: 1px solid #d9d9d9; border-radius: 4px;
+  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #666;
+}
+.btn-icon:hover { border-color: #1890ff; color: #1890ff; }
+
+/* ========== Right Panel: Calendar ========== */
+.right-panel { flex: 1; padding: 16px; overflow-y: auto; background: #f5f6fa; }
+
+/* Calendar Header */
+.calendar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.month-label { font-size: 15px; font-weight: 500; min-width: 100px; text-align: center; }
+.nav-btn {
+  width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 6px;
+  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #333;
+}
+.nav-btn:hover { border-color: #1890ff; color: #1890ff; }
+.btn-today {
+  padding: 5px 14px; border: 1px solid #d9d9d9; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 13px;
+}
+.btn-today:hover { border-color: #1890ff; color: #1890ff; }
+.calendar-hint { font-size: 12px; color: #999; margin-left: auto; }
+
+/* Calendar Grid */
+.calendar-grid { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; overflow: hidden; }
+.calendar-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  background: #fafafa; border-bottom: 1px solid #e8e8e8;
+}
+.calendar-weekdays .wd { padding: 10px; text-align: center; font-size: 13px; color: #999; font-weight: 500; }
+.calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.calendar-cell {
+  min-height: 90px; padding: 8px; border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0; position: relative; cursor: pointer; transition: background .2s;
+}
+.calendar-cell:hover { background: #f0f7ff; }
+.calendar-cell:nth-child(7n) { border-right: none; }
+.calendar-cell .day-num { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.calendar-cell .day-num.other-month { color: #ccc; }
+.calendar-cell .hours-text { font-size: 11px; color: #888; line-height: 1.5; }
+.calendar-cell .cell-toggle { position: absolute; top: 8px; right: 8px; transform: scale(0.7); }
+
+/* ========== Modal Overlay ========== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+/* ========== Save Confirm Modal ========== */
+.modal {
+  background: #fff; border-radius: 12px; padding: 24px 28px; width: 420px; max-width: 92vw;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15); animation: modalIn .25s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+.modal-title { font-size: 17px; font-weight: 600; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.modal-desc { font-size: 13px; color: #666; line-height: 1.7; margin-bottom: 20px; }
+
+/* Modal Buttons */
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.modal-actions .btn-modal-cancel {
+  padding: 8px 20px; border: 1px solid #d9d9d9; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 13px; color: #333;
+}
+.modal-actions .btn-modal-cancel:hover { border-color: #1890ff; color: #1890ff; }
+.modal-actions .btn-modal-confirm {
+  padding: 8px 20px; border: none; border-radius: 6px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.modal-actions .btn-modal-confirm:hover { background: #40a9ff; }
+
+/* ========== Business Status Edit Popover ========== */
+.popover-overlay {
+  display: none; position: fixed; inset: 0; z-index: 199;
+}
+.popover-overlay.active { display: block; }
+.popover {
+  position: absolute; z-index: 200; background: #fff; border-radius: 12px;
+  padding: 20px 24px; width: 320px; max-width: 90vw;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15); animation: popIn .2s ease;
+}
+@keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.popover::after {
+  content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  width: 16px; height: 16px; background: #fff; rotate: 45deg;
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.06);
+}
+.popover-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 16px; }
+.popover-radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.popover-radio {
+  display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px 0;
+}
+.popover-radio input[type="radio"] { display: none; }
+.popover-radio .p-circle {
+  width: 18px; height: 18px; border: 2px solid #d9d9d9; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: .2s;
+}
+.popover-radio.selected .p-circle { border-color: #1890ff; }
+.popover-radio .p-circle::after {
+  content: ''; width: 10px; height: 10px; border-radius: 50%;
+  background: #1890ff; transform: scale(0); transition: .2s;
+}
+.popover-radio.selected .p-circle::after { transform: scale(1); }
+.popover-radio .p-label { font-size: 14px; color: #333; }
+.popover-date-hint {
+  font-size: 13px; color: #1890ff; margin: -4px 0 10px 28px;
+  border-left: 3px solid #1890ff; padding-left: 8px;
+}
+.popover-divider { height: 1px; background: #f0f0f0; margin: 4px 0 10px; }
+.popover-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.popover-actions .btn-pop-cancel {
+  padding: 7px 18px; border: 1px solid #d9d9d9; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 13px; color: #333;
+}
+.popover-actions .btn-pop-cancel:hover { border-color: #1890ff; color: #1890ff; }
+.popover-actions .btn-pop-confirm {
+  padding: 7px 18px; border: none; border-radius: 6px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.popover-actions .btn-pop-confirm:hover { background: #40a9ff; }
+
+/* Popover Time Slots */
+.popover-time-slots {
+  margin: 8px 0 8px 28px; display: flex; flex-direction: column; gap: 6px;
+}
+.popover-time-slots .pop-slot {
+  display: flex; align-items: center; gap: 6px;
+}
+.popover-time-slots .pop-time-input {
+  width: 80px; padding: 4px 6px; border: 1px solid #d9d9d9; border-radius: 4px;
+  font-size: 12px; text-align: center; outline: none;
+}
+.popover-time-slots .pop-time-input:focus { border-color: #1890ff; }
+.popover-time-slots .pop-sep { color: #999; font-size: 12px; }
+.popover-time-slots .pop-remove {
+  width: 22px; height: 22px; border: 1px solid #d9d9d9; border-radius: 4px;
+  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #999; line-height: 1;
+}
+.popover-time-slots .pop-remove:hover { border-color: #ff4d4f; color: #ff4d4f; }
+.popover-add-slot {
+  width: 22px; height: 22px; font-size: 14px; margin-top: 2px;
+}
+
+/* ========== Responsive: Mobile ========== */
+@media (max-width: 768px) {
+  .main-container { flex-direction: column; }
+  .left-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #e8e8e8; max-height: 45vh; }
+  .right-panel { padding: 10px; }
+  .calendar-cell { min-height: 60px; padding: 4px; }
+  .calendar-cell .day-num { font-size: 13px; }
+  .calendar-cell .hours-text { font-size: 10px; }
+  .calendar-hint { display: none; }
+  .modal { padding: 20px; width: 95vw; }
+  .top-nav-right .search-box { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Top Navigation ========== -->
+<nav class="top-nav">
+  <div class="top-nav-left">
+    <span class="home-icon">🏠</span>
+    <span class="page-title"><span class="clock-icon">🕐</span> Opening Hours</span>
+  </div>
+  <div class="top-nav-right">
+    <div class="search-box">🔍 Opening Hours</div>
+    <div class="user-info">
+      <span>⏰</span>
+      <div class="avatar">刘</div>
+      <span>刘某某(Service Store Manager)</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ========== Main Content ========== -->
+<div class="main-container">
+
+  <!-- Left Panel: Setting -->
+  <div class="left-panel">
+    <div class="left-header">
+      <h2>General Setting</h2>
+      <div class="btn-group">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-save" id="btnSave">Save</button>
+      </div>
+    </div>
+
+    <!-- Day settings will be rendered by JS -->
+    <div id="daySettings"></div>
+  </div>
+
+  <!-- Right Panel: Calendar -->
+  <div class="right-panel">
+    <div class="calendar-header">
+      <div class="month-nav">
+        <button class="nav-btn" id="prevMonth">‹</button>
+        <button class="nav-btn" id="nextMonth">›</button>
+      </div>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="btn-today" id="btnToday">Today</button>
+      <span class="calendar-hint">Click date toggle to customize</span>
+    </div>
+    <div class="calendar-grid">
+      <div class="calendar-weekdays">
+        <div class="wd">Su</div><div class="wd">Mo</div><div class="wd">Tu</div>
+        <div class="wd">We</div><div class="wd">Th</div><div class="wd">Fr</div><div class="wd">Sa</div>
+      </div>
+      <div class="calendar-days" id="calendarDays"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Save Confirm Modal ========== -->
+<div class="modal-overlay" id="saveModalOverlay">
+  <div class="modal">
+    <div class="modal-title">
+      <span style="color:#faad14;font-size:20px;">⚠</span> Confirm Update
+    </div>
+    <div class="modal-desc">This will update the opening hours for all affected weekdays.<br>Save changes?</div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeSaveModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="confirmSave()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Business Status Edit Popover ========== -->
+<div class="popover-overlay" id="popoverOverlay" onclick="closePopover()"></div>
+<div class="popover" id="statusPopover" style="display:none;">
+  <div class="popover-title">Business Status Edit</div>
+  <div class="popover-radio-group">
+    <label class="popover-radio selected" data-value="follow" onclick="selectPopRadio(this)">
+      <input type="radio" name="dateStatus" value="follow" checked>
+      <span class="p-circle"></span>
+      <span class="p-label">Follow National Holidays</span>
+    </label>
+  </div>
+  <div class="popover-date-hint" id="popoverDateHint">| Apr 14 : Open</div>
+  <div class="popover-divider"></div>
+  <div class="popover-radio-group">
+    <label class="popover-radio" data-value="open" onclick="selectPopRadio(this)">
+      <input type="radio" name="dateStatus" value="open">
+      <span class="p-circle"></span>
+      <span class="p-label">Open</span>
+    </label>
+    <!-- Custom time slots for Open -->
+    <div class="popover-time-slots" id="popoverTimeSlots" style="display:none;">
+      <div id="popoverSlotList"></div>
+    </div>
+    <label class="popover-radio" data-value="close" onclick="selectPopRadio(this)">
+      <input type="radio" name="dateStatus" value="close">
+      <span class="p-circle"></span>
+      <span class="p-label">Close</span>
+    </label>
+  </div>
+  <div class="popover-actions">
+    <button class="btn-pop-cancel" onclick="closePopover()">Cancel</button>
+    <button class="btn-pop-confirm" onclick="confirmPopover()">Confirm</button>
+  </div>
+</div>
+
+<script>
+/* ========== Data Model ========== */
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Default opening hours per weekday (index 0=Mon ... 6=Sun)
+const defaultHours = [
+  { enabled: true, slots: [{ from: '08:40', to: '13:00' }] },
+  { enabled: true, slots: [{ from: '08:10', to: '17:00' }] },
+  { enabled: true, slots: [{ from: '09:00', to: '12:00' }, { from: '13:00', to: '17:00' }] },
+  { enabled: true, slots: [{ from: '08:00', to: '17:00' }] },
+  { enabled: true, slots: [{ from: '08:00', to: '17:00' }] },
+  { enabled: false, slots: [] },
+  { enabled: false, slots: [] },
+];
+
+function cloneHours(h) { return JSON.parse(JSON.stringify(h)); }
+
+let weekdayHours = cloneHours(defaultHours);
+let dateOverrides = {}; // key: "YYYY-MM-DD", value: { status: "open"|"close"|"follow", slots?: [{from,to}] }
+let currentYear, currentMonth;
+let pendingPopover = null; // { dateKey, dayNum, weekdayIdx }
+let popoverSlots = []; // temp slots being edited in popover
+
+/* ========== Left Panel ========== */
+function renderDaySettings() {
+  const container = document.getElementById('daySettings');
+  container.innerHTML = '';
+  DAYS.forEach((day, i) => {
+    const d = weekdayHours[i];
+    const row = document.createElement('div');
+    row.className = 'day-row';
+    let slotsHTML = '';
+    if (d.enabled) {
+      d.slots.forEach((s, si) => {
+        slotsHTML += `
+          <div class="time-slot">
+            <input type="time" class="time-input" value="${s.from}" data-day="${i}" data-slot="${si}" data-field="from" onchange="onTimeChange(this)">
+            <span class="time-sep">—</span>
+            <input type="time" class="time-input" value="${s.to}" data-day="${i}" data-slot="${si}" data-field="to" onchange="onTimeChange(this)">
+            ${si === d.slots.length - 1 ? `<button class="btn-icon" onclick="addSlot(${i})">+</button>` : ''}
+            ${d.slots.length > 1 ? `<button class="btn-icon" onclick="removeSlot(${i},${si})">−</button>` : ''}
+          </div>`;
+      });
+    }
+    row.innerHTML = `
+      <div class="day-row-header">
+        <span class="day-label">${day}</span>
+        <label class="toggle">
+          <input type="checkbox" ${d.enabled ? 'checked' : ''} onchange="toggleDay(${i}, this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="time-slots">${slotsHTML}</div>`;
+    container.appendChild(row);
+  });
+}
+
+function toggleDay(dayIdx, checked) {
+  weekdayHours[dayIdx].enabled = checked;
+  if (checked && weekdayHours[dayIdx].slots.length === 0) {
+    weekdayHours[dayIdx].slots.push({ from: '08:00', to: '17:00' });
+  }
+  renderDaySettings();
+  renderCalendar();
+}
+
+function addSlot(dayIdx) {
+  weekdayHours[dayIdx].slots.push({ from: '13:00', to: '17:00' });
+  renderDaySettings();
+}
+
+function removeSlot(dayIdx, slotIdx) {
+  weekdayHours[dayIdx].slots.splice(slotIdx, 1);
+  renderDaySettings();
+  renderCalendar();
+}
+
+// Left side time change → directly applies to all same weekday (no scope modal needed)
+function onTimeChange(input) {
+  const dayIdx = parseInt(input.dataset.day);
+  const slotIdx = parseInt(input.dataset.slot);
+  const field = input.dataset.field;
+  weekdayHours[dayIdx].slots[slotIdx][field] = input.value;
+  renderCalendar();
+}
+
+/* ========== Save Confirm Modal ========== */
+document.getElementById('btnSave').addEventListener('click', () => {
+  document.getElementById('saveModalOverlay').classList.add('active');
+});
+
+function closeSaveModal() {
+  document.getElementById('saveModalOverlay').classList.remove('active');
+}
+
+function confirmSave() {
+  closeSaveModal();
+  // In real app: persist weekdayHours + dateOverrides to backend
+  alert('Settings saved successfully.');
+}
+
+document.getElementById('saveModalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeSaveModal();
+});
+
+/* ========== Calendar ========== */
+function initCalendar() {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const label = document.getElementById('monthLabel');
+  label.textContent = `${MONTH_SHORT[currentMonth]}, ${currentYear}`;
+
+  const container = document.getElementById('calendarDays');
+  container.innerHTML = '';
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+
+  for (let i = firstDay - 1; i >= 0; i--) {
+    container.appendChild(createCell(prevMonthDays - i, true, null, null));
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const jsDay = date.getDay();
+    const idx = jsDay === 0 ? 6 : jsDay - 1;
+    const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    container.appendChild(createCell(d, false, idx, dateKey));
+  }
+  const totalCells = container.children.length;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    container.appendChild(createCell(d, true, null, null));
+  }
+}
+
+function getDateStatus(weekdayIdx, dateKey) {
+  if (dateKey && dateOverrides[dateKey]) {
+    const ov = dateOverrides[dateKey];
+    if (ov.status === 'open') return true;
+    if (ov.status === 'close') return false;
+  }
+  return weekdayHours[weekdayIdx].enabled;
+}
+
+function getDateSlots(weekdayIdx, dateKey) {
+  // Return custom slots if date has open override with slots, otherwise weekday default
+  if (dateKey && dateOverrides[dateKey] && dateOverrides[dateKey].status === 'open' && dateOverrides[dateKey].slots) {
+    return dateOverrides[dateKey].slots;
+  }
+  return weekdayHours[weekdayIdx].slots;
+}
+
+function createCell(dayNum, isOtherMonth, weekdayIdx, dateKey) {
+  const cell = document.createElement('div');
+  cell.className = 'calendar-cell';
+
+  let hoursText = '';
+  let toggleHTML = '';
+
+  if (!isOtherMonth && weekdayIdx !== null) {
+    const isOpen = getDateStatus(weekdayIdx, dateKey);
+    const slots = getDateSlots(weekdayIdx, dateKey);
+    if (isOpen && slots.length > 0) {
+      hoursText = slots.map(s => `${s.from}-${s.to}`).join('<br>');
+    }
+    toggleHTML = `
+      <label class="toggle cell-toggle" onclick="event.stopPropagation()">
+        <input type="checkbox" ${isOpen ? 'checked' : ''}
+          onchange="onCellToggle(event, ${dayNum}, ${weekdayIdx}, '${dateKey}')">
+        <span class="toggle-slider"></span>
+      </label>`;
+  }
+
+  cell.innerHTML = `
+    <div class="day-num ${isOtherMonth ? 'other-month' : ''}">${dayNum}</div>
+    <div class="hours-text">${hoursText}</div>
+    ${toggleHTML}`;
+
+  return cell;
+}
+
+/* ========== Cell Toggle → Business Status Edit Popover ========== */
+function onCellToggle(event, dayNum, weekdayIdx, dateKey) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const toggleInput = event.target;
+  const rect = toggleInput.closest('.calendar-cell').getBoundingClientRect();
+
+  const isCurrentlyOpen = getDateStatus(weekdayIdx, dateKey);
+
+  pendingPopover = { dateKey, dayNum, weekdayIdx };
+
+  // Update popover content
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('popoverDateHint').textContent =
+    `| ${monthNames[currentMonth]} ${dayNum} : ${isCurrentlyOpen ? 'Open' : 'Closed'}`;
+
+  // Reset radio selection based on current override
+  document.querySelectorAll('#statusPopover .popover-radio').forEach(r => r.classList.remove('selected'));
+  const currentOverride = dateOverrides[dateKey];
+  if (currentOverride && currentOverride.status === 'open') {
+    document.querySelector('#statusPopover .popover-radio[data-value="open"]').classList.add('selected');
+    document.querySelector('#statusPopover input[value="open"]').checked = true;
+    // Load custom slots or default from weekday
+    popoverSlots = currentOverride.slots ? cloneHours(currentOverride.slots) : cloneHours(weekdayHours[weekdayIdx].slots);
+    showPopoverSlots(true);
+  } else if (currentOverride && currentOverride.status === 'close') {
+    document.querySelector('#statusPopover .popover-radio[data-value="close"]').classList.add('selected');
+    document.querySelector('#statusPopover input[value="close"]').checked = true;
+    popoverSlots = cloneHours(weekdayHours[weekdayIdx].slots);
+    showPopoverSlots(false);
+  } else {
+    document.querySelector('#statusPopover .popover-radio[data-value="follow"]').classList.add('selected');
+    document.querySelector('#statusPopover input[value="follow"]').checked = true;
+    popoverSlots = cloneHours(weekdayHours[weekdayIdx].slots);
+    showPopoverSlots(false);
+  }
+
+  // Position popover above the cell
+  const popover = document.getElementById('statusPopover');
+  popover.style.display = 'block';
+  const popW = popover.offsetWidth;
+  let left = rect.left + rect.width / 2 - popW / 2;
+  let top = rect.top - popover.offsetHeight - 12;
+  // Keep within viewport
+  if (left < 8) left = 8;
+  if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+  if (top < 8) top = rect.bottom + 12;
+  popover.style.left = left + 'px';
+  popover.style.top = top + 'px';
+
+  document.getElementById('popoverOverlay').classList.add('active');
+}
+
+function selectPopRadio(el) {
+  document.querySelectorAll('#statusPopover .popover-radio').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+  const val = el.dataset.value;
+  showPopoverSlots(val === 'open');
+}
+
+/* ========== Popover Time Slots ========== */
+function showPopoverSlots(show) {
+  const container = document.getElementById('popoverTimeSlots');
+  container.style.display = show ? 'flex' : 'none';
+  if (show) renderPopoverSlots();
+}
+
+function renderPopoverSlots() {
+  const list = document.getElementById('popoverSlotList');
+  if (popoverSlots.length === 0) popoverSlots.push({ from: '08:00', to: '17:00' });
+  list.innerHTML = popoverSlots.map((s, i) => `
+    <div class="pop-slot">
+      <input type="time" class="pop-time-input" value="${s.from}" onchange="popoverSlots[${i}].from=this.value">
+      <span class="pop-sep">—</span>
+      <input type="time" class="pop-time-input" value="${s.to}" onchange="popoverSlots[${i}].to=this.value">
+      ${popoverSlots.length > 1 ? `<button class="pop-remove" onclick="removePopoverSlot(${i})">−</button>` : ''}
+      ${i === popoverSlots.length - 1 ? `<button class="btn-icon popover-add-slot" onclick="addPopoverSlot()" title="Add time slot">+</button>` : ''}
+    </div>`).join('');
+}
+
+function addPopoverSlot() {
+  popoverSlots.push({ from: '13:00', to: '17:00' });
+  renderPopoverSlots();
+}
+
+function removePopoverSlot(idx) {
+  popoverSlots.splice(idx, 1);
+  renderPopoverSlots();
+}
+
+function closePopover() {
+  document.getElementById('statusPopover').style.display = 'none';
+  document.getElementById('popoverOverlay').classList.remove('active');
+  pendingPopover = null;
+}
+
+function confirmPopover() {
+  if (!pendingPopover) { closePopover(); return; }
+  const { dateKey } = pendingPopover;
+  const selected = document.querySelector('#statusPopover input[name="dateStatus"]:checked').value;
+
+  if (selected === 'follow') {
+    delete dateOverrides[dateKey];
+  } else if (selected === 'open') {
+    dateOverrides[dateKey] = { status: 'open', slots: cloneHours(popoverSlots) };
+  } else {
+    dateOverrides[dateKey] = { status: 'close' };
+  }
+
+  closePopover();
+  renderCalendar();
+}
+
+/* ========== Calendar Navigation ========== */
+document.getElementById('prevMonth').addEventListener('click', () => {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+});
+document.getElementById('btnToday').addEventListener('click', () => {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth();
+  renderCalendar();
+});
+
+/* ========== Init ========== */
+renderDaySettings();
+initCalendar();
+</script>
+</body>
+</html>
