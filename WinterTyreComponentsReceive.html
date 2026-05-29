@@ -273,9 +273,7 @@ table.data-table {
 .modal-filter .m-actions { display: flex; gap: 10px; align-items: center; }
 
 .modal table.data-table { min-width: 720px; }
-.modal .modal-table-wrap {
-  margin-top: 18px;
-}
+.modal .modal-table-wrap { margin-top: 18px; }
 .modal .data-table thead th { background: #fafafa; }
 .modal .qty-input {
   width: 80px; height: 28px; padding: 0 8px;
@@ -537,10 +535,11 @@ const MOCK_DATA = [
     shippingMethods: 'Sea', orderType: 'Stock',
     etd: '2026-05-20', atd: '2026-05-21', eta: '2026-05-26', ata: '',
     receivedTime: '', receivedBy: '',
+    xpBatchNo: 'XPW2510310002', supplierBatchNo: 'SIPPLIER_103103',
     parts: [
-      { partNo: 'WT100001', partName: 'Winter Tyre 235/55 R19', delivered: 20, received: 0 },
-      { partNo: 'WT100002', partName: 'Winter Tyre 245/45 R20', delivered: 16, received: 0 },
-      { partNo: 'WT100003', partName: 'TPMS Sensor Kit', delivered: 40, received: 0 }
+      { orderNo: 'DGtest1251031N05', partNo: 'WT100001', partName: 'Winter Tyre 235/55 R19', batchQty: 20 },
+      { orderNo: 'DGtest1251031N06', partNo: 'WT100002', partName: 'Winter Tyre 245/45 R20', batchQty: 16 },
+      { orderNo: 'DGtest1251031N07', partNo: 'WT100003', partName: 'TPMS Sensor Kit', batchQty: 40 }
     ]
   },
   {
@@ -551,9 +550,10 @@ const MOCK_DATA = [
     shippingMethods: 'Air', orderType: 'Urgent',
     etd: '2026-05-15', atd: '2026-05-16', eta: '2026-05-22', ata: '2026-05-22',
     receivedTime: '2026-05-22 14:35', receivedBy: 'Liu ZiHan',
+    xpBatchNo: 'XPW2510220001', supplierBatchNo: 'SIPPLIER_102201',
     parts: [
-      { partNo: 'WT100010', partName: 'Wheel Hub Assembly', delivered: 10, received: 10 },
-      { partNo: 'WT100011', partName: 'Brake Caliper', delivered: 8, received: 7 }
+      { orderNo: 'DGtest1251022N01', partNo: 'WT100010', partName: 'Wheel Hub Assembly', batchQty: 10 },
+      { orderNo: 'DGtest1251022N02', partNo: 'WT100011', partName: 'Brake Caliper', batchQty: 8 }
     ]
   },
   {
@@ -564,9 +564,10 @@ const MOCK_DATA = [
     shippingMethods: 'Land', orderType: 'VOR',
     etd: '2026-05-22', atd: '2026-05-23', eta: '2026-05-28', ata: '',
     receivedTime: '', receivedBy: '',
+    xpBatchNo: 'XPW2510280003', supplierBatchNo: 'SIPPLIER_102803',
     parts: [
-      { partNo: 'WT100020', partName: 'Front Hood Vibration Damping Repair Kit', delivered: 4, received: 0 },
-      { partNo: 'WT100021', partName: 'Tyre Pressure Valve', delivered: 50, received: 0 }
+      { orderNo: 'DGtest1251028N01', partNo: 'WT100020', partName: 'Front Hood Vibration Damping Repair Kit', batchQty: 4 },
+      { orderNo: 'DGtest1251028N02', partNo: 'WT100021', partName: 'Tyre Pressure Valve', batchQty: 50 }
     ]
   },
   {
@@ -577,8 +578,9 @@ const MOCK_DATA = [
     shippingMethods: 'Sea', orderType: 'Stock',
     etd: '2026-05-05', atd: '2026-05-06', eta: '2026-05-12', ata: '2026-05-13',
     receivedTime: '2026-05-13 09:18', receivedBy: 'Wang Jie',
+    xpBatchNo: 'XPW2510120004', supplierBatchNo: 'SIPPLIER_101204',
     parts: [
-      { partNo: 'WT100030', partName: 'Studded Winter Tyre 215/65 R17', delivered: 32, received: 32 }
+      { orderNo: 'DGtest1251012N01', partNo: 'WT100030', partName: 'Studded Winter Tyre 215/65 R17', batchQty: 32 }
     ]
   },
   {
@@ -589,8 +591,9 @@ const MOCK_DATA = [
     shippingMethods: 'Air', orderType: 'Stock',
     etd: '2026-05-23', atd: '', eta: '2026-05-29', ata: '',
     receivedTime: '', receivedBy: '',
+    xpBatchNo: 'XPW2510290005', supplierBatchNo: 'SIPPLIER_102905',
     parts: [
-      { partNo: 'WT100040', partName: 'All-Season Tyre 225/60 R18', delivered: 24, received: 0 }
+      { orderNo: 'DGtest1251029N01', partNo: 'WT100040', partName: 'All-Season Tyre 225/60 R18', batchQty: 24 }
     ]
   }
 ];
@@ -799,7 +802,12 @@ function openReceive(receiptNo) {
   const row = MOCK_DATA.find(r => r.receiptNo === receiptNo);
   if (!row) return;
   state.currentReceipt = row;
-  state.modalParts = row.parts.map(p => ({ ...p, received: p.received || p.delivered }));
+  state.modalParts = row.parts.map(p => ({
+    partNo: p.partNo,
+    partName: p.partName,
+    delivered: p.batchQty != null ? p.batchQty : (p.delivered || 0),
+    received: p.batchQty != null ? p.batchQty : (p.delivered || 0)
+  }));
   state.modalFiltered = [...state.modalParts];
   document.getElementById('modalTitle').textContent = `Receipt No. ${row.receiptNo}`;
   document.getElementById('m_partNo').value = '';
@@ -818,7 +826,6 @@ function renderModalTable() {
   } else {
     tbody.innerHTML = state.modalFiltered.map((p, i) => {
       // Discrepancy Qty = Delivered Qty - Received Qty
-      // (When Received decreases, Discrepancy increases)
       const disc = p.delivered - (p.received || 0);
       const idx = state.modalParts.indexOf(p);
       return `<tr>
@@ -838,12 +845,10 @@ function updateReceived(idx, val) {
   const v = parseInt(val, 10);
   const part = state.modalParts[idx];
   let received = isNaN(v) ? 0 : Math.max(0, v);
-  // Received cannot exceed Delivered
   if (received > part.delivered) received = part.delivered;
   part.received = received;
   renderModalTable();
 }
-/* Allow editing Discrepancy Qty directly: Received = Delivered - Discrepancy */
 function updateDiscrepancy(idx, val) {
   const v = parseInt(val, 10);
   const part = state.modalParts[idx];
@@ -870,7 +875,6 @@ function resetModalFilter() {
 }
 function confirmReceive() {
   if (!state.currentReceipt) return;
-  state.currentReceipt.parts = state.modalParts.map(p => ({ ...p }));
   state.currentReceipt.status = 'Received';
   const now = new Date();
   state.currentReceipt.receivedTime =
