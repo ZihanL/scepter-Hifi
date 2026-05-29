@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winter Tyre Batch Mgt</title>
+<style>
+/* ========== Reset & Base ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f5f6fa; color: #333; font-size: 14px;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ========== Top Bar ========== */
+.top-bar {
+  background: #fff; border-bottom: 1px solid #e8e8e8;
+  display: flex; align-items: center; padding: 0 24px; height: 48px;
+}
+.top-bar .home-ic {
+  width: 32px; height: 32px; display: inline-flex;
+  align-items: center; justify-content: center; color: #555; cursor: pointer;
+}
+.top-bar .tabs { display: flex; align-items: stretch; height: 100%; margin-left: 8px; flex: 1; min-width: 0; overflow-x: auto; }
+.top-bar .tab {
+  padding: 0 18px; display: inline-flex; align-items: center;
+  font-size: 14px; color: #666; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; height: 100%;
+}
+.top-bar .tab:hover { color: #1890ff; }
+.top-bar .tab.active { color: #1890ff; font-weight: 500; border-bottom-color: #1890ff; }
+.top-bar .right-area { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.top-bar .search-mini { display: flex; align-items: center; gap: 6px; color: #666; cursor: pointer; }
+.top-bar .icon-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #666; cursor: pointer;
+}
+.top-bar .icon-circle:hover { background: #f5f5f5; color: #1890ff; }
+.top-bar .user-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #333; }
+.top-bar .user-chip .avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #ff4d4f; color: #fff; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 600;
+}
+
+/* ========== Filter Section ========== */
+.filter-section { background: #fff; padding: 18px 24px; border-bottom: 1px solid #e8e8e8; }
+.filter-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px; align-items: end;
+}
+.filter-item { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.filter-item > label { font-size: 13px; color: #333; font-weight: 400; }
+.filter-item input,
+.filter-item select {
+  height: 32px; padding: 0 10px; border: 1px solid #d9d9d9;
+  border-radius: 4px; font-size: 13px; color: #333;
+  background: #fff; outline: none; transition: border-color 0.2s; width: 100%;
+}
+.filter-item input:focus,
+.filter-item select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.filter-item input::placeholder { color: #bfbfbf; }
+.filter-item .date-range { display: flex; align-items: center; gap: 4px; }
+.filter-item .date-range input { min-width: 0; flex: 1; }
+.filter-item .date-range .sep { color: #999; }
+.filter-actions-cell {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px; height: 32px;
+}
+.btn-reset {
+  height: 32px; padding: 0 16px; border: 1px solid #d9d9d9;
+  border-radius: 4px; background: #fff; cursor: pointer;
+  font-size: 13px; color: #333; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-reset:hover { border-color: #1890ff; color: #1890ff; }
+.btn-search {
+  height: 32px; padding: 0 22px; border: none; border-radius: 4px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-search:hover { background: #40a9ff; }
+
+/* ========== Table Card ========== */
+.table-card {
+  background: #fff; margin: 16px 24px; border-radius: 4px;
+  border: 1px solid #e8e8e8; position: relative;
+}
+.toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; padding: 12px 16px;
+}
+.icon-btn {
+  width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer;
+  color: #555; transition: all 0.2s;
+}
+.icon-btn:hover { border-color: #1890ff; color: #1890ff; }
+.btn-toolbar {
+  height: 32px; padding: 0 16px; border: 1px solid #d9d9d9;
+  border-radius: 4px; background: #fff; cursor: pointer;
+  font-size: 13px; color: #333; display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.2s;
+}
+.btn-toolbar:hover { border-color: #1890ff; color: #1890ff; }
+.btn-toolbar.primary {
+  background: #1890ff; color: #fff; border-color: #1890ff;
+}
+.btn-toolbar.primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+
+/* Table */
+.table-wrap { width: 100%; overflow-x: auto; }
+table.data-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px;
+}
+.data-table thead th {
+  background: #fafafa; color: #333; font-weight: 500;
+  padding: 14px 16px; text-align: left; border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+.data-table tbody td {
+  padding: 16px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; color: #333;
+}
+.data-table tbody tr:hover { background: #fafcff; }
+.data-table .col-action { width: 90px; }
+.data-table .receipt-link { color: #1890ff; cursor: pointer; }
+.data-table .receipt-link:hover { text-decoration: underline; }
+
+/* Action icons in row */
+.row-actions { display: flex; align-items: center; gap: 14px; }
+.row-actions .ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #1890ff; transition: opacity 0.2s; position: relative;
+}
+.row-actions .ico:hover { opacity: 0.75; }
+.row-actions .ico[data-disabled="true"] { color: #d9d9d9; cursor: not-allowed; }
+.row-actions .ico::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.75); color: #fff; padding: 3px 8px; border-radius: 4px;
+  font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+}
+.row-actions .ico:hover::after { opacity: 1; }
+
+/* Pagination */
+.pagination {
+  display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+  padding: 14px 16px; color: #666;
+}
+.pagination .page-info { margin-right: 12px; color: #555; }
+.pagination button {
+  min-width: 28px; height: 28px; border: 1px solid #d9d9d9; background: #fff;
+  border-radius: 4px; cursor: pointer; color: #333; padding: 0 6px;
+}
+.pagination button.active { border-color: #1890ff; color: #1890ff; }
+.pagination button:disabled { color: #bfbfbf; cursor: not-allowed; }
+.pagination select {
+  height: 28px; border: 1px solid #d9d9d9; border-radius: 4px;
+  padding: 0 6px; background: #fff; outline: none;
+}
+
+/* ========== Floating feedback button ========== */
+.fab-feedback {
+  position: fixed; right: 24px; bottom: 24px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #1890ff; color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px rgba(24,144,255,0.35);
+}
+
+/* ========== Modal ========== */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: none; align-items: flex-start; justify-content: center; z-index: 999;
+  padding: 80px 16px 16px;
+}
+.modal-mask.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 4px; width: 100%; max-width: 1180px;
+  max-height: calc(100vh - 96px); overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+}
+.modal-header {
+  padding: 18px 24px; border-bottom: 1px solid #f0f0f0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2 { font-size: 16px; font-weight: 600; color: #1f1f1f; }
+.modal-close {
+  width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #999; border-radius: 4px;
+}
+.modal-close:hover { color: #333; background: #f5f5f5; }
+.modal-body { padding: 20px 24px; overflow: auto; flex: 1; }
+.modal-footer {
+  padding: 14px 24px; border-top: 1px solid #f0f0f0;
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+.btn-primary {
+  height: 32px; padding: 0 22px; border: none; border-radius: 4px;
+  background: #1890ff; color: #fff; cursor: pointer; font-size: 13px;
+}
+.btn-primary:hover { background: #40a9ff; }
+
+/* Modal: header info section (XP Batch / Supplier Batch) */
+.modal-info {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 16px; font-size: 13px; color: #333;
+}
+.modal-info .info-line { display: flex; gap: 6px; }
+.modal-info .info-line .lbl { font-weight: 600; color: #1f1f1f; }
+.modal-info .info-line .val { color: #333; }
+
+.modal-section-title {
+  font-size: 14px; font-weight: 600; color: #1f1f1f;
+  margin-bottom: 10px;
+}
+.modal-section { margin-top: 18px; }
+.modal-section:first-of-type { margin-top: 0; }
+.modal table.data-table { min-width: 980px; }
+.modal .modal-table-wrap {
+  margin-top: 6px; border: 1px solid #f0f0f0; border-radius: 4px;
+}
+.modal .data-table thead th { background: #fafafa; }
+.modal .data-table tbody td { vertical-align: middle; padding: 14px 12px; }
+.modal .qty-input {
+  width: 90px; height: 30px; padding: 0 8px;
+  border: 1px solid #d9d9d9; border-radius: 4px; outline: none; font-size: 13px;
+}
+.modal .qty-input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.modal .qty-input[readonly] { background: #f5f5f5; color: #666; cursor: not-allowed; }
+
+/* Standalone Remark block below the parts table */
+.remark-block {
+  position: relative;
+  border: 1px solid #d9d9d9; border-radius: 4px;
+  padding: 8px 10px 6px; background: #fff;
+  transition: border-color 0.2s;
+}
+.remark-block:focus-within { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.remark-block textarea {
+  width: 100%; min-height: 72px;
+  border: none; outline: none; resize: vertical;
+  font-size: 13px; font-family: inherit; color: #333; background: transparent;
+}
+.remark-block textarea::placeholder { color: #bfbfbf; }
+.remark-block .remark-counter {
+  text-align: right; font-size: 12px; color: #999; margin-top: 2px;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 1280px) { .filter-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 960px)  { .filter-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-section, .table-card { margin-left: 12px; margin-right: 12px; }
+  .top-bar { padding: 0 12px; }
+}
+
+svg.ic { width: 16px; height: 16px; }
+svg.ic-lg { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="home-ic" title="Home">
+    <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/>
+    </svg>
+  </div>
+  <div class="tabs">
+    <div class="tab active">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/>
+      </svg>
+      Winter Tyre Ba...
+    </div>
+  </div>
+  <div class="right-area">
+    <div class="search-mini">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <span>Winter Tyre Batch Mgt</span>
+    </div>
+    <div class="icon-circle" title="Add">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </div>
+    <div class="icon-circle" title="Language">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/>
+      </svg>
+    </div>
+    <div class="user-chip">
+      <span class="avatar">99+</span>
+      <span>Spare Parts Manager (Region)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Section: 9 fields total + Reset/Search -->
+<div class="filter-section">
+  <div class="filter-grid" id="filterGrid">
+    <!-- Row 1 -->
+    <div class="filter-item">
+      <label>XP Batch No.</label>
+      <input id="f_xpBatch" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>Supplier Batch No.</label>
+      <input id="f_supplierBatch" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>Order No.</label>
+      <input id="f_orderNo" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item">
+      <label>Batch Status</label>
+      <select id="f_batchStatus">
+        <option value="">Select</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Received">Received</option>
+        <option value="In Transit">In Transit</option>
+      </select>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="filter-item">
+      <label>Batch Create Time</label>
+      <div class="date-range">
+        <input id="f_batchCreateStart" type="date" />
+        <span class="sep">→</span>
+        <input id="f_batchCreateEnd" type="date" />
+      </div>
+    </div>
+    <div class="filter-item">
+      <label>Store Code</label>
+      <select id="f_storeCode">
+        <option value="">Select</option>
+        <option value="ST001">ST001</option>
+        <option value="ST002">ST002</option>
+        <option value="ST003">ST003</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Country/Region</label>
+      <select id="f_country">
+        <option value="">Please select Country/Region</option>
+        <option value="Norway">Norway</option>
+        <option value="Sweden">Sweden</option>
+        <option value="Finland">Finland</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Part No.</label>
+      <select id="f_partNo">
+        <option value="">Select</option>
+        <option value="XH99EU000134">XH99EU000134</option>
+        <option value="XH99EU000201">XH99EU000201</option>
+        <option value="XH99EU000305">XH99EU000305</option>
+      </select>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="filter-item">
+      <label>Part Name</label>
+      <input id="f_partName" type="text" placeholder="Enter" />
+    </div>
+    <div class="filter-item"></div>
+    <div class="filter-item"></div>
+    <div class="filter-actions-cell">
+      <button class="btn-reset" onclick="resetFilters()">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/>
+        </svg>
+        Reset
+      </button>
+      <button class="btn-search" onclick="applyFilters()">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        Search
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Table Card -->
+<div class="table-card">
+  <div class="toolbar">
+    <button class="icon-btn" id="colSettingsBtn" title="Column Settings">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
+    </button>
+    <button class="btn-toolbar primary">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add
+    </button>
+    <button class="btn-toolbar">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      Import Batch
+    </button>
+    <button class="btn-toolbar">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      Import Logistics
+    </button>
+    <button class="btn-toolbar" onclick="exportData()">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table" id="mainTable">
+      <thead>
+        <tr>
+          <th>XP Batch No.</th>
+          <th>Supplier Batch No.</th>
+          <th>Batch Status</th>
+          <th>Total Batch Qty</th>
+          <th>Batch Created Time</th>
+          <th>Created By</th>
+          <th>Remark</th>
+          <th class="col-action">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span class="page-info" id="pageInfo">0-0 of 0 items</span>
+    <button id="prevPage" onclick="changePage(-1)">‹</button>
+    <button class="active" id="curPage">1</button>
+    <button id="nextPage" onclick="changePage(1)">›</button>
+    <select id="pageSize" onchange="changePageSize(this.value)">
+      <option value="10">10 / page</option>
+      <option value="20">20 / page</option>
+      <option value="50">50 / page</option>
+    </select>
+  </div>
+</div>
+
+<!-- Floating Feedback Button -->
+<div class="fab-feedback" title="Feedback">
+  <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+</div>
+
+<!-- Receive Winter Tyre Modal -->
+<div class="modal-mask" id="receiveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Receive Winter Tyre</h2>
+      <span class="modal-close" onclick="closeModal()">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info">
+        <div class="info-line">
+          <span class="lbl">XP Batch No.:</span>
+          <span class="val" id="m_xpBatch">-</span>
+        </div>
+        <div class="info-line">
+          <span class="lbl">Supplier Batch No.:</span>
+          <span class="val" id="m_supplierBatch">-</span>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Winter Tyre Information</div>
+        <div class="modal-table-wrap table-wrap">
+          <table class="data-table" id="modalTable">
+            <thead>
+              <tr>
+                <th>Order No.</th>
+                <th>Part No.</th>
+                <th>Part Name</th>
+                <th>Batch Qty</th>
+                <th>Receiving Qty</th>
+                <th>Discrepancy (Damage)</th>
+                <th>Discrepancy (Shortage)</th>
+              </tr>
+            </thead>
+            <tbody id="modalTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Standalone Remark block: one batch-level remark, max 500 chars -->
+      <div class="modal-section">
+        <div class="modal-section-title">Remark</div>
+        <div class="remark-block">
+          <textarea id="m_remark" maxlength="500" placeholder="Enter" oninput="updateBatchRemark(this.value)"></textarea>
+          <div class="remark-counter"><span id="m_remarkCount">0</span>/500</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-reset" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmReceive()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== Mock Data ============== */
+const MOCK_DATA = [
+  {
+    xpBatchNo: 'XPW2605260005', supplierBatchNo: '03821332',
+    batchStatus: 'Shipped', totalBatchQty: 4,
+    batchCreatedTime: '2026-05-26 09:14:41', createdBy: 'Chengze Zhang',
+    orderNo: 'AFDE0501260417U01',
+    parts: [
+      { orderNo: 'AFDE0501260417U01', partNo: 'XH99EU000134', partName: 'G6 Tires KIT (255/45-R20/105W)-Winter EU', batchQty: 4 }
+    ]
+  },
+  {
+    xpBatchNo: 'XPW2605250004', supplierBatchNo: '03821289',
+    batchStatus: 'In Transit', totalBatchQty: 12,
+    batchCreatedTime: '2026-05-25 14:08:20', createdBy: 'Liu ZiHan',
+    orderNo: 'AFDE0501260415U02',
+    parts: [
+      { orderNo: 'AFDE0501260415U02', partNo: 'XH99EU000201', partName: 'G6 Tires KIT (235/55-R19/101V)-Winter EU', batchQty: 12 }
+    ]
+  },
+  {
+    xpBatchNo: 'XPW2605240003', supplierBatchNo: '03821256',
+    batchStatus: 'Shipped', totalBatchQty: 8,
+    batchCreatedTime: '2026-05-24 10:32:55', createdBy: 'Wang Jie',
+    orderNo: 'AFDE0501260412U01',
+    parts: [
+      { orderNo: 'AFDE0501260412U01', partNo: 'XH99EU000305', partName: 'G6 Tires KIT (245/45-R20/103W)-Winter EU', batchQty: 6 },
+      { orderNo: 'AFDE0501260412U02', partNo: 'XH99EU000306', partName: 'G6 TPMS Sensor', batchQty: 2 }
+    ]
+  },
+  {
+    xpBatchNo: 'XPW2605230002', supplierBatchNo: '03821210',
+    batchStatus: 'Received', totalBatchQty: 6,
+    batchCreatedTime: '2026-05-23 16:45:11', createdBy: 'Chengze Zhang',
+    orderNo: 'AFDE0501260408U01',
+    parts: [
+      { orderNo: 'AFDE0501260408U01', partNo: 'XH99EU000401', partName: 'Studded Winter Tyre 215/65 R17', batchQty: 6 }
+    ]
+  },
+  {
+    xpBatchNo: 'XPW2605200001', supplierBatchNo: '03821088',
+    batchStatus: 'Shipped', totalBatchQty: 20,
+    batchCreatedTime: '2026-05-20 08:22:33', createdBy: 'Liu ZiHan',
+    orderNo: 'AFDE0501260401U01',
+    parts: [
+      { orderNo: 'AFDE0501260401U01', partNo: 'XH99EU000501', partName: 'All-Season Tyre 225/60 R18', batchQty: 20 }
+    ]
+  }
+];
+
+/* ============== Helpers ============== */
+function esc(v){ return v == null ? '' : String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function pad(n){ return String(n).padStart(2,'0'); }
+
+/* ============== State ============== */
+let state = {
+  page: 1,
+  pageSize: 10,
+  filtered: [...MOCK_DATA],
+  currentBatch: null,
+  modalParts: [],
+  batchRemark: ''
+};
+
+/* ============== Render Table ============== */
+function renderBody() {
+  const tbody = document.getElementById('tbody');
+  const start = (state.page - 1) * state.pageSize;
+  const pageData = state.filtered.slice(start, start + state.pageSize);
+  if (pageData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:48px; color:#999;">No Data</td></tr>`;
+  } else {
+    tbody.innerHTML = pageData.map(r => {
+      const canReceive = r.batchStatus === 'Shipped' || r.batchStatus === 'In Transit';
+      const receiveIcon = canReceive ? `
+        <span class="ico" data-tip="Receive" onclick="openReceive('${r.xpBatchNo}')">
+          <svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 8h18l-2 11a2 2 0 0 1-2 1.7H7a2 2 0 0 1-2-1.7L3 8z"/>
+            <path d="M3 8l3-5h12l3 5"/>
+            <path d="M9 12h6"/>
+          </svg>
+        </span>` : '';
+      return `<tr>
+        <td><a class="receipt-link" onclick="goDetail('${r.xpBatchNo}')">${esc(r.xpBatchNo)}</a></td>
+        <td>${esc(r.supplierBatchNo)}</td>
+        <td>${esc(r.batchStatus)}</td>
+        <td>${r.totalBatchQty}</td>
+        <td>${esc(r.batchCreatedTime)}</td>
+        <td>${esc(r.createdBy)}</td>
+        <td>${esc(r.remark || '')}</td>
+        <td><div class="row-actions">${receiveIcon}</div></td>
+      </tr>`;
+    }).join('');
+  }
+  const total = state.filtered.length;
+  const from = total === 0 ? 0 : start + 1;
+  const to = Math.min(start + state.pageSize, total);
+  document.getElementById('pageInfo').textContent = `${from}-${to} of ${total} items`;
+  document.getElementById('curPage').textContent = state.page;
+  document.getElementById('prevPage').disabled = state.page === 1;
+  document.getElementById('nextPage').disabled = to >= total;
+}
+
+/* ============== Filters ============== */
+function applyFilters() {
+  const f = {
+    xp: document.getElementById('f_xpBatch').value.trim().toLowerCase(),
+    sup: document.getElementById('f_supplierBatch').value.trim().toLowerCase(),
+    order: document.getElementById('f_orderNo').value.trim().toLowerCase(),
+    status: document.getElementById('f_batchStatus').value,
+    bcStart: document.getElementById('f_batchCreateStart').value,
+    bcEnd: document.getElementById('f_batchCreateEnd').value,
+    store: document.getElementById('f_storeCode').value,
+    country: document.getElementById('f_country').value,
+    partNo: document.getElementById('f_partNo').value,
+    partName: document.getElementById('f_partName').value.trim().toLowerCase()
+  };
+  state.filtered = MOCK_DATA.filter(r => {
+    if (f.xp && !r.xpBatchNo.toLowerCase().includes(f.xp)) return false;
+    if (f.sup && !r.supplierBatchNo.toLowerCase().includes(f.sup)) return false;
+    if (f.order && !(r.orderNo || '').toLowerCase().includes(f.order)) return false;
+    if (f.status && r.batchStatus !== f.status) return false;
+    if (f.bcStart && r.batchCreatedTime.slice(0,10) < f.bcStart) return false;
+    if (f.bcEnd && r.batchCreatedTime.slice(0,10) > f.bcEnd) return false;
+    if (f.partNo && !r.parts.some(p => p.partNo === f.partNo)) return false;
+    if (f.partName && !r.parts.some(p => p.partName.toLowerCase().includes(f.partName))) return false;
+    return true;
+  });
+  state.page = 1;
+  renderBody();
+}
+function resetFilters() {
+  ['f_xpBatch','f_supplierBatch','f_orderNo','f_batchCreateStart','f_batchCreateEnd','f_partName']
+    .forEach(id => document.getElementById(id).value = '');
+  ['f_batchStatus','f_storeCode','f_country','f_partNo']
+    .forEach(id => document.getElementById(id).value = '');
+  state.filtered = [...MOCK_DATA];
+  state.page = 1;
+  renderBody();
+}
+
+/* ============== Pagination ============== */
+function changePage(d) {
+  const total = state.filtered.length;
+  const maxPage = Math.max(1, Math.ceil(total / state.pageSize));
+  state.page = Math.min(Math.max(1, state.page + d), maxPage);
+  renderBody();
+}
+function changePageSize(v) {
+  state.pageSize = parseInt(v, 10);
+  state.page = 1;
+  renderBody();
+}
+
+/* ============== Export ============== */
+function exportData() {
+  const now = new Date();
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const filename = `WinterTyreBatchMgt${ts}.csv`;
+  const headers = ['XP Batch No.','Supplier Batch No.','Batch Status','Total Batch Qty','Batch Created Time','Created By','Remark','Action'];
+  const rows = state.filtered.map(r =>
+    [r.xpBatchNo, r.supplierBatchNo, r.batchStatus, r.totalBatchQty, r.batchCreatedTime, r.createdBy, r.remark || '', '']
+      .map(v => `"${(v ?? '').toString().replace(/"/g,'""')}"`).join(',')
+  );
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============== Detail Navigation ============== */
+function goDetail(xpBatchNo) {
+  alert(`Navigate to detail page of ${xpBatchNo}`);
+}
+
+/* ============== Receive Modal ============== */
+/*
+ * Calculation rules:
+ *   Receiving Qty + Discrepancy(Damage) + Discrepancy(Shortage) = Batch Qty
+ *   Receiving Qty defaults to Batch Qty (read-only, computed)
+ *   Discrepancy(Damage)   defaults 0; min 0; max Batch Qty
+ *   Discrepancy(Shortage) defaults 0; min 0; max Batch Qty
+ */
+const REMARK_MAX = 500;
+
+function openReceive(xpBatchNo) {
+  const row = MOCK_DATA.find(r => r.xpBatchNo === xpBatchNo);
+  if (!row) return;
+  state.currentBatch = row;
+  // Per-part qty fields (Remark is now a batch-level field)
+  state.modalParts = row.parts.map(p => ({
+    orderNo: p.orderNo,
+    partNo: p.partNo,
+    partName: p.partName,
+    batchQty: p.batchQty,
+    damage: 0,
+    shortage: 0
+  }));
+  // Batch-level remark, restored if previously saved
+  state.batchRemark = row.remark || '';
+  document.getElementById('m_xpBatch').textContent = row.xpBatchNo;
+  document.getElementById('m_supplierBatch').textContent = row.supplierBatchNo;
+  const remarkEl = document.getElementById('m_remark');
+  remarkEl.value = state.batchRemark;
+  document.getElementById('m_remarkCount').textContent = state.batchRemark.length;
+  renderModalTable();
+  document.getElementById('receiveModal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('receiveModal').classList.remove('show');
+  state.currentBatch = null;
+}
+function computeReceiving(p) {
+  return Math.max(0, p.batchQty - (p.damage || 0) - (p.shortage || 0));
+}
+function renderModalTable() {
+  const tbody = document.getElementById('modalTbody');
+  if (!state.modalParts || state.modalParts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px; color:#999;">No Data</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = state.modalParts.map((p, idx) => {
+    const receiving = computeReceiving(p);
+    return `<tr>
+      <td>${esc(p.orderNo)}</td>
+      <td>${esc(p.partNo)}</td>
+      <td>${esc(p.partName)}</td>
+      <td>${p.batchQty}</td>
+      <td><input type="number" class="qty-input" value="${receiving}" readonly tabindex="-1" /></td>
+      <td><input type="number" min="0" max="${p.batchQty}" step="1" class="qty-input" value="${p.damage}" onchange="updateDamage(${idx}, this.value)" /></td>
+      <td><input type="number" min="0" max="${p.batchQty}" step="1" class="qty-input" value="${p.shortage}" onchange="updateShortage(${idx}, this.value)" /></td>
+    </tr>`;
+  }).join('');
+}
+/* Clamp helper: natural number in [0, max] */
+function clampNat(v, max) {
+  let n = parseInt(v, 10);
+  if (isNaN(n) || n < 0) n = 0;
+  if (n > max) n = max;
+  return n;
+}
+/* Edit Discrepancy (Damage). If Damage + Shortage exceeds Batch Qty, reduce Shortage. */
+function updateDamage(idx, val) {
+  const p = state.modalParts[idx];
+  p.damage = clampNat(val, p.batchQty);
+  if (p.damage + p.shortage > p.batchQty) p.shortage = p.batchQty - p.damage;
+  renderModalTable();
+}
+/* Edit Discrepancy (Shortage). Same constraint. */
+function updateShortage(idx, val) {
+  const p = state.modalParts[idx];
+  p.shortage = clampNat(val, p.batchQty);
+  if (p.damage + p.shortage > p.batchQty) p.damage = p.batchQty - p.shortage;
+  renderModalTable();
+}
+/* Update batch-level Remark; only update counter to keep textarea focus */
+function updateBatchRemark(val) {
+  state.batchRemark = (val || '').slice(0, REMARK_MAX);
+  document.getElementById('m_remarkCount').textContent = state.batchRemark.length;
+}
+function confirmReceive() {
+  if (!state.currentBatch) return;
+  state.currentBatch.parts = state.modalParts.map(p => ({ ...p }));
+  state.currentBatch.remark = state.batchRemark || '';
+  state.currentBatch.batchStatus = 'Received';
+  closeModal();
+  applyFilters();
+  alert('Receive confirmed.');
+}
+
+/* ============== Init ============== */
+renderBody();
+</script>
+</body>
+</html>
